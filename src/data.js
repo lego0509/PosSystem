@@ -85,14 +85,41 @@ const sausageOptions = [
   }
 ];
 
-export const PRODUCTS = [
+const OPTION_TEMPLATES = [
+  {
+    id: "none",
+    label: "オプションなし",
+    description: "追加オプションを設定しない商品",
+    options: []
+  },
+  {
+    id: "pancake-standard",
+    label: "パンケーキ標準",
+    description: "追いホイップやソース濃度など",
+    options: pancakeOptions
+  },
+  {
+    id: "crepe-standard",
+    label: "クレープ標準",
+    description: "ホイップ量・ソース量・包みかた",
+    options: crepeOptions
+  },
+  {
+    id: "sausage-standard",
+    label: "ソーセージ標準",
+    description: "ケチャップとマスタードの有無",
+    options: sausageOptions
+  }
+];
+
+const DEFAULT_PRODUCTS = [
   {
     id: "pancake-classic",
     category: "pancake",
     name: "クラシック",
     price: 350,
     image: "https://placehold.co/400x300?text=Classic",
-    options: pancakeOptions
+    optionTemplate: "pancake-standard"
   },
   {
     id: "pancake-choco",
@@ -100,7 +127,7 @@ export const PRODUCTS = [
     name: "チョコソース",
     price: 400,
     image: "https://placehold.co/400x300?text=Choco",
-    options: pancakeOptions
+    optionTemplate: "pancake-standard"
   },
   {
     id: "pancake-strawberry",
@@ -108,7 +135,7 @@ export const PRODUCTS = [
     name: "いちご＆ホイップ",
     price: 450,
     image: "https://placehold.co/400x300?text=Strawberry",
-    options: pancakeOptions
+    optionTemplate: "pancake-standard"
   },
   {
     id: "pancake-maple",
@@ -116,7 +143,7 @@ export const PRODUCTS = [
     name: "メープルバター",
     price: 420,
     image: "https://placehold.co/400x300?text=Maple",
-    options: pancakeOptions
+    optionTemplate: "pancake-standard"
   },
   {
     id: "pancake-banana",
@@ -124,7 +151,7 @@ export const PRODUCTS = [
     name: "バナナチョコ",
     price: 430,
     image: "https://placehold.co/400x300?text=Banana",
-    options: pancakeOptions
+    optionTemplate: "pancake-standard"
   },
   {
     id: "pancake-berry",
@@ -132,7 +159,7 @@ export const PRODUCTS = [
     name: "ベリーミックス",
     price: 480,
     image: "https://placehold.co/400x300?text=Berry",
-    options: pancakeOptions
+    optionTemplate: "pancake-standard"
   },
   {
     id: "crepe-sugar",
@@ -140,7 +167,7 @@ export const PRODUCTS = [
     name: "シュガーバター",
     price: 300,
     image: "https://placehold.co/400x300?text=Sugar",
-    options: crepeOptions
+    optionTemplate: "crepe-standard"
   },
   {
     id: "crepe-custard",
@@ -148,7 +175,7 @@ export const PRODUCTS = [
     name: "カスタード＆いちご",
     price: 450,
     image: "https://placehold.co/400x300?text=Custard",
-    options: crepeOptions
+    optionTemplate: "crepe-standard"
   },
   {
     id: "crepe-choco",
@@ -156,7 +183,7 @@ export const PRODUCTS = [
     name: "チョコバナナ",
     price: 420,
     image: "https://placehold.co/400x300?text=ChocoBanana",
-    options: crepeOptions
+    optionTemplate: "crepe-standard"
   },
   {
     id: "crepe-tuna",
@@ -164,7 +191,7 @@ export const PRODUCTS = [
     name: "ツナマヨ",
     price: 430,
     image: "https://placehold.co/400x300?text=Tuna",
-    options: crepeOptions
+    optionTemplate: "crepe-standard"
   },
   {
     id: "crepe-ham",
@@ -172,7 +199,7 @@ export const PRODUCTS = [
     name: "ハムチーズ",
     price: 440,
     image: "https://placehold.co/400x300?text=Ham",
-    options: crepeOptions
+    optionTemplate: "crepe-standard"
   },
   {
     id: "crepe-matcha",
@@ -180,7 +207,7 @@ export const PRODUCTS = [
     name: "抹茶クリーム",
     price: 460,
     image: "https://placehold.co/400x300?text=Matcha",
-    options: crepeOptions
+    optionTemplate: "crepe-standard"
   },
   {
     id: "sausage-large",
@@ -188,7 +215,7 @@ export const PRODUCTS = [
     name: "ソーセージ（大）",
     price: 350,
     image: "https://placehold.co/400x300?text=Sausage",
-    options: sausageOptions
+    optionTemplate: "sausage-standard"
   },
   {
     id: "drink-ice-coffee",
@@ -196,7 +223,7 @@ export const PRODUCTS = [
     name: "アイスコーヒー",
     price: 200,
     image: "https://placehold.co/400x300?text=Iced+Coffee",
-    options: []
+    optionTemplate: "none"
   },
   {
     id: "drink-orange",
@@ -204,7 +231,7 @@ export const PRODUCTS = [
     name: "オレンジジュース",
     price: 200,
     image: "https://placehold.co/400x300?text=Orange",
-    options: []
+    optionTemplate: "none"
   },
   {
     id: "drink-ice-tea",
@@ -212,7 +239,7 @@ export const PRODUCTS = [
     name: "アイスティー",
     price: 200,
     image: "https://placehold.co/400x300?text=Iced+Tea",
-    options: []
+    optionTemplate: "none"
   },
   {
     id: "drink-oolong",
@@ -220,11 +247,8 @@ export const PRODUCTS = [
     name: "ウーロン茶",
     price: 200,
     image: "https://placehold.co/400x300?text=Oolong",
-    options: []
-  }
-];
-
-export const POPULAR_SETS = [
+    optionTemplate: "none"
+  },
   {
     id: "set-pancake-drink",
     category: "popular",
@@ -232,7 +256,7 @@ export const POPULAR_SETS = [
     price: 520,
     image: "https://placehold.co/400x300?text=Set+A",
     description: "クラシックパンケーキ＋お好きなドリンク",
-    options: []
+    optionTemplate: "none"
   },
   {
     id: "set-berry-coffee",
@@ -241,7 +265,7 @@ export const POPULAR_SETS = [
     price: 650,
     image: "https://placehold.co/400x300?text=Set+B",
     description: "ベリーミックスとアイスコーヒーのお得セット",
-    options: []
+    optionTemplate: "none"
   },
   {
     id: "set-crepe-drink",
@@ -250,12 +274,152 @@ export const POPULAR_SETS = [
     price: 580,
     image: "https://placehold.co/400x300?text=Set+C",
     description: "クレープ＋ドリンクの定番コンビ",
-    options: []
+    optionTemplate: "none"
   }
 ];
 
-export const ALL_PRODUCTS = [...PRODUCTS, ...POPULAR_SETS];
+const PRODUCT_STORAGE_KEY = "school-fes-pos-products-v1";
+
+let cachedCatalog = null;
+const globalCrypto = typeof crypto !== "undefined" ? crypto : null;
+
+function cloneOption(option) {
+  const cloned = { ...option };
+  if (Array.isArray(option.options)) {
+    cloned.options = option.options.map((opt) => ({ ...opt }));
+  }
+  return cloned;
+}
+
+function cloneTemplate(template) {
+  return {
+    ...template,
+    options: template.options.map(cloneOption)
+  };
+}
+
+export function getOptionTemplates() {
+  return OPTION_TEMPLATES.map(cloneTemplate);
+}
+
+function optionTemplateForCategory(category) {
+  switch (category) {
+    case "pancake":
+      return "pancake-standard";
+    case "crepe":
+      return "crepe-standard";
+    case "sausage":
+      return "sausage-standard";
+    default:
+      return "none";
+  }
+}
+
+function sanitizeProduct(product) {
+  if (!product) return null;
+  const price = Number.isFinite(Number(product.price))
+    ? Math.max(0, Math.round(Number(product.price)))
+    : 0;
+  let optionTemplate = product.optionTemplate || product.optionSet;
+  if (!optionTemplate) {
+    optionTemplate = optionTemplateForCategory(product.category);
+  }
+  return {
+    id: String(product.id || globalCrypto?.randomUUID?.() || Date.now().toString()),
+    category: product.category || "pancake",
+    name: product.name || "",
+    price,
+    image: product.image || "https://placehold.co/400x300?text=No+Image",
+    optionTemplate,
+    description: product.description || ""
+  };
+}
+
+function sanitizeCatalog(data) {
+  if (!data || !Array.isArray(data.products)) {
+    return { products: DEFAULT_PRODUCTS.map((product) => sanitizeProduct(product)) };
+  }
+  const products = data.products
+    .map((product) => sanitizeProduct(product))
+    .filter(Boolean);
+  return { products };
+}
+
+function loadFromStorage() {
+  if (typeof localStorage === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(PRODUCT_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return sanitizeCatalog(parsed);
+  } catch (error) {
+    console.warn("Failed to load product catalog", error);
+    return null;
+  }
+}
+
+function ensureCatalog() {
+  if (!cachedCatalog) {
+    cachedCatalog = loadFromStorage() || sanitizeCatalog(null);
+  }
+  return {
+    products: cachedCatalog.products.map((product) => ({ ...product }))
+  };
+}
+
+function getTemplateById(id) {
+  return OPTION_TEMPLATES.find((template) => template.id === id) || OPTION_TEMPLATES[0];
+}
+
+function attachOptions(product) {
+  const template = getTemplateById(product.optionTemplate);
+  return {
+    ...product,
+    options: template.options.map(cloneOption)
+  };
+}
+
+export function getCatalog() {
+  return ensureCatalog();
+}
+
+export function getAllProducts() {
+  const catalog = ensureCatalog();
+  return catalog.products.map((product) => attachOptions(product));
+}
+
+export function saveCatalog(catalog) {
+  cachedCatalog = sanitizeCatalog(catalog);
+  if (typeof localStorage !== "undefined") {
+    localStorage.setItem(PRODUCT_STORAGE_KEY, JSON.stringify(cachedCatalog));
+  }
+  window.dispatchEvent(new CustomEvent("catalog:updated"));
+}
+
+export function resetCatalog() {
+  cachedCatalog = sanitizeCatalog(null);
+  if (typeof localStorage !== "undefined") {
+    localStorage.setItem(PRODUCT_STORAGE_KEY, JSON.stringify(cachedCatalog));
+  }
+  window.dispatchEvent(new CustomEvent("catalog:updated"));
+}
 
 export function findProduct(productId) {
-  return ALL_PRODUCTS.find((product) => product.id === productId);
+  return getAllProducts().find((product) => product.id === productId);
+}
+
+export function listenCatalog(callback) {
+  const handler = () => callback(getAllProducts());
+  const storageHandler = (event) => {
+    if (event.key === PRODUCT_STORAGE_KEY) {
+      cachedCatalog = null;
+      handler();
+    }
+  };
+  window.addEventListener("catalog:updated", handler);
+  window.addEventListener("storage", storageHandler);
+  return () => {
+    window.removeEventListener("catalog:updated", handler);
+    window.removeEventListener("storage", storageHandler);
+  };
 }

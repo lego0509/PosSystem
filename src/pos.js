@@ -1,4 +1,4 @@
-import { CATEGORIES, ALL_PRODUCTS } from "./data.js";
+import { CATEGORIES, getAllProducts, listenCatalog } from "./data.js";
 import { addOrder, getPause, setPause, getNextOrderNumber, listenStorage } from "./storage.js";
 import { formatCurrency, summarizeOptions, createAudioPlayer, FEEDBACK_SOUND } from "./utils.js";
 
@@ -35,6 +35,7 @@ let cartItems = [];
 let historyStack = [];
 let modalProduct = null;
 let modalSelections = {};
+let allProducts = [];
 
 function setQuickQuantity(qty) {
   quickQuantity = Math.max(1, Math.min(9, qty));
@@ -77,9 +78,9 @@ function updateCategoryButtons() {
 
 function getProductsByCategory(categoryId) {
   if (categoryId === "popular") {
-    return ALL_PRODUCTS.filter((product) => product.category === "popular");
+    return allProducts.filter((product) => product.category === "popular");
   }
-  return ALL_PRODUCTS.filter((product) => product.category === categoryId);
+  return allProducts.filter((product) => product.category === categoryId);
 }
 
 function renderProducts() {
@@ -118,6 +119,40 @@ function switchCategory(categoryId) {
   currentCategory = categoryId;
   updateCategoryButtons();
   renderProducts();
+}
+
+function refreshProducts() {
+  allProducts = getAllProducts();
+  if (!allProducts.some((product) => product.category === currentCategory)) {
+    currentCategory = CATEGORIES[0].id;
+    updateCategoryButtons();
+  }
+  renderProducts();
+  syncCartWithProducts();
+}
+
+function syncCartWithProducts() {
+  let changed = false;
+  cartItems = cartItems.map((item) => {
+    const product = allProducts.find((p) => p.id === item.productId);
+    if (!product) {
+      return item;
+    }
+    const summary = summarizeOptions(product, item.options);
+    if (item.name !== product.name || item.price !== product.price || JSON.stringify(item.optionSummary) !== JSON.stringify(summary)) {
+      changed = true;
+      return {
+        ...item,
+        name: product.name,
+        price: product.price,
+        optionSummary: summary
+      };
+    }
+    return item;
+  });
+  if (changed) {
+    renderCart();
+  }
 }
 
 function addCartItem(product, selections, quantity) {
@@ -538,9 +573,12 @@ document.addEventListener("keydown", (event) => {
 
 function init() {
   buildCategoryTabs();
-  renderProducts();
+  refreshProducts();
   renderCart();
   initPauseState();
+  listenCatalog(() => {
+    refreshProducts();
+  });
 }
 
 init();

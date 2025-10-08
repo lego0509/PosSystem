@@ -1,4 +1,4 @@
-import { CATEGORIES, findProduct } from "./data.js";
+import { CATEGORIES, getAllProducts, listenCatalog } from "./data.js";
 import { getOrders, updateOrderStatus, updateOrder, listenStorage } from "./storage.js";
 import { formatElapsed, createAudioPlayer, FEEDBACK_SOUND, shortCategoryLabel } from "./utils.js";
 
@@ -22,6 +22,11 @@ const playFeedback = createAudioPlayer(feedbackAudio, FEEDBACK_SOUND);
 
 let currentOrders = [];
 let timerInterval = null;
+let productMap = new Map();
+
+function refreshProductMap() {
+  productMap = new Map(getAllProducts().map((product) => [product.id, product]));
+}
 
 function buildFilterOptions() {
   CATEGORIES.forEach((category) => {
@@ -37,7 +42,7 @@ function loadOrders() {
 }
 
 function formatOptionBadges(item) {
-  const product = findProduct(item.productId) || { options: [] };
+  const product = productMap.get(item.productId) || { options: [] };
   const fragment = document.createDocumentFragment();
   product.options.forEach((option) => {
     const value = item.options?.[option.id];
@@ -244,8 +249,13 @@ listenStorage(() => {
 function init() {
   buildFilterOptions();
   setupDragAndDrop();
+  refreshProductMap();
   refreshBoard();
   startTimer();
+  listenCatalog(() => {
+    refreshProductMap();
+    renderBoard();
+  });
 }
 
 init();
