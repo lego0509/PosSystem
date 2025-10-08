@@ -31,6 +31,9 @@ const productNameInput = document.getElementById("product-name");
 const productCategorySelect = document.getElementById("product-category");
 const productPriceInput = document.getElementById("product-price");
 const productImageInput = document.getElementById("product-image");
+const productImageFileInput = document.getElementById("product-image-file");
+const productImageFileClear = document.getElementById("product-image-file-clear");
+const productImageFileStatus = document.getElementById("product-image-file-status");
 const productTemplateSelect = document.getElementById("product-template");
 const productDescriptionInput = document.getElementById("product-description");
 const previewImage = document.getElementById("product-preview-image");
@@ -43,6 +46,8 @@ let catalog = { products: [] };
 let selectedProductId = null;
 let optionTemplates = getOptionTemplates();
 let feedbackTimeoutId = null;
+let uploadedImageData = null;
+let uploadedImageName = "";
 
 function loadCatalogState() {
   catalog = getCatalog();
@@ -148,7 +153,7 @@ function renderProductList() {
     header.appendChild(categoryTag);
 
     const image = document.createElement("img");
-    image.src = product.image;
+    image.src = product.image || "https://placehold.co/400x300?text=No+Image";
     image.alt = `${product.name} の画像`;
 
     const price = document.createElement("div");
@@ -233,13 +238,33 @@ function clearFeedback() {
   }
 }
 
+function setUploadedImage(data, name = "") {
+  uploadedImageData = data || null;
+  uploadedImageName = data ? name || "" : "";
+  if (productImageFileInput) {
+    productImageFileInput.value = "";
+  }
+  if (productImageFileStatus) {
+    if (uploadedImageData) {
+      const label = uploadedImageName ? `${uploadedImageName} を使用中` : "アップロード画像を使用中";
+      productImageFileStatus.textContent = label;
+      productImageFileStatus.classList.add("active");
+    } else {
+      productImageFileStatus.textContent = "ファイル未選択";
+      productImageFileStatus.classList.remove("active");
+    }
+  }
+  updatePreview();
+}
+
 function updatePreview() {
   const name = productNameInput.value.trim() || "商品名";
   const priceValue = Number(productPriceInput.value);
   const imageUrl = productImageInput.value.trim();
+  const previewSource = uploadedImageData || imageUrl;
   previewName.textContent = name;
   previewPrice.textContent = Number.isFinite(priceValue) ? formatCurrency(Math.max(0, Math.round(priceValue))) : "¥0";
-  previewImage.src = imageUrl || "https://placehold.co/200x150?text=Preview";
+  previewImage.src = previewSource || "https://placehold.co/200x150?text=Preview";
 }
 
 previewImage.addEventListener("error", () => {
@@ -269,7 +294,15 @@ function setForm(product, mode) {
   const category = product?.category || CATEGORIES[0].id;
   productCategorySelect.value = category;
   productPriceInput.value = product?.price ?? 0;
-  productImageInput.value = product?.image || "";
+  const imageValue = product?.image || "";
+  const isUploaded = typeof imageValue === "string" && imageValue.startsWith("data:");
+  if (isUploaded) {
+    productImageInput.value = "";
+    setUploadedImage(imageValue, product?.imageName || "");
+  } else {
+    productImageInput.value = imageValue;
+    setUploadedImage(null, "");
+  }
   productTemplateSelect.value = product?.optionTemplate || defaultTemplateForCategory(category);
   productDescriptionInput.value = product?.description || "";
   saveButton.disabled = false;
@@ -311,6 +344,9 @@ function startDuplicate(product) {
   const duplicate = { ...product };
   duplicate.id = generateUniqueId(`${product.id}-copy`);
   duplicate.name = `${product.name} (コピー)`;
+  if (product.imageName) {
+    duplicate.imageName = product.imageName;
+  }
   startCreateProduct(duplicate);
   productIdInput.value = duplicate.id;
   updatePreview();
@@ -361,16 +397,63 @@ function getProductFromForm() {
     return null;
   }
 
+  const imageSource = uploadedImageData || productImageInput.value.trim();
+  const fallbackImage = `https://placehold.co/400x300?text=${encodeURIComponent(name)}`;
   const product = {
     id: productIdInput.value.trim(),
     name,
     category: productCategorySelect.value,
     price: Math.round(priceValue),
-    image: productImageInput.value.trim() || `https://placehold.co/400x300?text=${encodeURIComponent(name)}`,
+    image: imageSource || fallbackImage,
     optionTemplate: productTemplateSelect.value || defaultTemplateForCategory(productCategorySelect.value),
     description: productDescriptionInput.value.trim()
   };
+  if (uploadedImageData) {
+    product.imageName = uploadedImageName;
+  }
   return product;
+}
+
+function handleImageFileChange() {
+  if (!productImageFileInput || !productImageFileInput.files || productImageFileInput.files.length === 0) {
+    return;
+  }
+  const file = productImageFileInput.files[0];
+  if (file && file.type && !file.type.startsWith("image/")) {
+    showFeedback("画像ファイルを選択してください", "error");
+    productImageFileInput.value = "";
+    return;
+  }
+  if (!file) {
+    return;
+  }
+  const previousData = uploadedImageData;
+  const previousName = uploadedImageName;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const result = typeof reader.result === "string" ? reader.result : null;
+    if (!result) {
+      showFeedback("画像の読み込みに失敗しました", "error");
+      setUploadedImage(previousData, previousName || "");
+      return;
+    }
+    setUploadedImage(result, file.name || "");
+    showFeedback("画像ファイルを読み込みました", "success");
+  };
+  reader.onerror = () => {
+    showFeedback("画像の読み込みに失敗しました", "error");
+    setUploadedImage(previousData, previousName || "");
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleImageFileClear() {
+  if (!uploadedImageData) {
+    setUploadedImage(null, "");
+    return;
+  }
+  setUploadedImage(null, "");
+  showFeedback("アップロード画像を解除しました", "success");
 }
 
 function handleSave(event) {
@@ -441,6 +524,12 @@ function init() {
   productNameInput.addEventListener("input", updatePreview);
   productPriceInput.addEventListener("input", updatePreview);
   productImageInput.addEventListener("input", updatePreview);
+  if (productImageFileInput) {
+    productImageFileInput.addEventListener("change", handleImageFileChange);
+  }
+  if (productImageFileClear) {
+    productImageFileClear.addEventListener("click", handleImageFileClear);
+  }
   productCategorySelect.addEventListener("change", handleCategoryChange);
   productTemplateSelect.addEventListener("change", clearFeedback);
   addButton.addEventListener("click", () => {

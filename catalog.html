@@ -87,6 +87,28 @@
             />
           </div>
           <div class="form-row">
+            <label for="product-image-file">画像ファイル</label>
+            <div class="file-input-group">
+              <input
+                id="product-image-file"
+                name="imageFile"
+                type="file"
+                accept="image/*"
+                data-testid="catalog-field-image-file"
+              />
+              <button
+                id="product-image-file-clear"
+                type="button"
+                class="ghost"
+                data-testid="catalog-field-image-file-clear"
+              >
+                クリア
+              </button>
+            </div>
+            <p id="product-image-file-status" class="form-hint" aria-live="polite">ファイル未選択</p>
+            <p class="form-hint">PCからアップロードした画像がある場合はこちらが優先されます。</p>
+          </div>
+          <div class="form-row">
             <label for="product-image">画像URL</label>
             <input
               id="product-image"
@@ -95,6 +117,7 @@
               placeholder="https://..."
               data-testid="catalog-field-image"
             />
+            <p class="form-hint">外部URLを直接指定することもできます。</p>
           </div>
           <div class="form-row">
             <label for="product-template">無料オプションセット</label>

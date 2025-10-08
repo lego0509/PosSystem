@@ -132,6 +132,26 @@
   font-weight: 600;
 }
 
+.form-hint {
+  font-size: 0.9rem;
+  color: rgba(17, 24, 39, 0.7);
+}
+
+.form-hint.active {
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+
+.file-input-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.file-input-group input[type="file"] {
+  flex: 1;
+}
+
 .form-row input,
 .form-row select,
 .form-row textarea {
