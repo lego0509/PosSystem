@@ -1,0 +1,192 @@
+.kds-screen {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.kds-controls {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.kds-controls input,
+.kds-controls select {
+  padding: 0.8rem;
+  border-radius: 12px;
+  border: 1px solid rgba(226, 232, 240, 0.4);
+  background: rgba(15, 23, 42, 0.6);
+  color: inherit;
+  min-width: 200px;
+}
+
+.kds-board {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(3, 1fr);
+  flex: 1;
+  min-height: calc(100vh - 200px);
+}
+
+.kds-column {
+  background: rgba(15, 23, 42, 0.8);
+  border-radius: 18px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.kds-column header {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+  letter-spacing: 0.08em;
+}
+
+.kds-column-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  overflow-y: auto;
+  padding-right: 0.4rem;
+}
+
+.kds-card {
+  background: rgba(15, 23, 42, 0.9);
+  border-radius: 16px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  border: 2px solid transparent;
+  cursor: grab;
+  box-shadow: 0 15px 25px rgba(0, 0, 0, 0.25);
+}
+
+.kds-card.dragging {
+  opacity: 0.7;
+  cursor: grabbing;
+}
+
+.kds-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.kds-card .order-number {
+  font-size: clamp(2.5rem, 5vw, 3.2rem);
+  font-weight: 800;
+}
+
+.kds-card .elapsed {
+  font-size: 1.3rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.kds-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.kds-card .customer-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.kds-card .item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.kds-card .item-list li {
+  font-size: 1.15rem;
+}
+
+.option-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-left: 0.5rem;
+}
+
+.option-badge {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.option-badge.level-low {
+  background: rgba(96, 165, 250, 0.25);
+  color: #bfdbfe;
+}
+
+.option-badge.level-medium {
+  background: rgba(74, 222, 128, 0.25);
+  color: #bbf7d0;
+}
+
+.option-badge.level-high {
+  background: rgba(248, 113, 113, 0.25);
+  color: #fecaca;
+}
+
+.option-badge.toggle-on {
+  background: rgba(248, 250, 252, 0.15);
+  color: #e2e8f0;
+  border: 1px solid rgba(226, 232, 240, 0.2);
+}
+
+.option-badge.toggle-off {
+  background: rgba(15, 23, 42, 0.2);
+  color: rgba(226, 232, 240, 0.5);
+  border: 1px dashed rgba(226, 232, 240, 0.2);
+}
+
+.item-note {
+  color: #fda4af;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.kds-card-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.kds-card[data-category="パンケーキ"] {
+  border-color: #fbbf24;
+}
+
+.kds-card[data-category="クレープ"] {
+  border-color: #34d399;
+}
+
+.kds-card[data-category="ソーセージ"] {
+  border-color: #f87171;
+}
+
+.kds-card[data-category="ドリンク"] {
+  border-color: #60a5fa;
+}
+
+.kds-card:hover,
+.kds-card:focus-within {
+  border-color: var(--accent);
+}
+
+.drop-target {
+  border: 2px dashed rgba(148, 163, 184, 0.4);
+}
+
+@media (max-width: 1280px) {
+  .kds-board {
+    grid-template-columns: 1fr;
+  }
+}

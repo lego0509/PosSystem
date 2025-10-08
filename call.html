@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>呼び出し - 学園祭カフェ POS</title>
+    <link rel="stylesheet" href="src/styles/common.css" />
+    <link rel="stylesheet" href="src/styles/call.css" />
+  </head>
+  <body class="screen call-screen">
+    <header class="screen-header">
+      <div>
+        <h1>受け渡し案内</h1>
+        <p class="screen-subtitle">番号表示モニター</p>
+      </div>
+      <div class="call-controls">
+        <button id="call-fullscreen" class="ghost" data-testid="call-fullscreen" aria-label="全画面表示">全画面</button>
+        <button id="call-reannounce" class="ghost" data-testid="call-reannounce" aria-label="選択した番号を再掲">再掲</button>
+      </div>
+    </header>
+    <main class="call-layout">
+      <section class="ready-section" aria-label="受け渡し待ち番号">
+        <h2>お待ちのお客様</h2>
+        <div id="call-ready-grid" class="ready-grid" data-testid="call-ready-grid" aria-live="polite"></div>
+      </section>
+      <section class="history-section" aria-label="最近の受け渡し済み">
+        <h2>最近の受け渡し済み</h2>
+        <div id="call-history" class="history-list" data-testid="call-history" aria-live="polite"></div>
+      </section>
+    </main>
+    <audio id="call-feedback" preload="auto"></audio>
+    <script type="module" src="src/call.js"></script>
+  </body>
+</html>

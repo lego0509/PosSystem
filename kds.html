@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>キッチン進行 - 学園祭カフェ POS</title>
+    <link rel="stylesheet" href="src/styles/common.css" />
+    <link rel="stylesheet" href="src/styles/kds.css" />
+  </head>
+  <body class="screen kds-screen">
+    <header class="screen-header">
+      <div>
+        <h1>注文一覧</h1>
+        <p class="screen-subtitle">キッチンモニター</p>
+      </div>
+      <div class="kds-controls">
+        <input type="search" id="kds-search" data-testid="kds-search" placeholder="番号 / 名前で検索" aria-label="注文検索" />
+        <select id="kds-category-filter" data-testid="kds-category-filter" aria-label="カテゴリフィルタ">
+          <option value="all">すべて</option>
+        </select>
+        <button id="kds-refresh" class="ghost" data-testid="kds-refresh" aria-label="最新状態を読み込む">更新</button>
+      </div>
+    </header>
+    <main class="kds-board" aria-label="注文ボード">
+      <section class="kds-column" data-status="queued" aria-label="待ち">
+        <header>待ち</header>
+        <div class="kds-column-body" id="kds-queued" data-testid="kds-queued"></div>
+      </section>
+      <section class="kds-column" data-status="in_progress" aria-label="調理中">
+        <header>調理中</header>
+        <div class="kds-column-body" id="kds-in-progress" data-testid="kds-in-progress"></div>
+      </section>
+      <section class="kds-column" data-status="ready" aria-label="完成">
+        <header>完成</header>
+        <div class="kds-column-body" id="kds-ready" data-testid="kds-ready"></div>
+      </section>
+    </main>
+    <template id="kds-card-template">
+      <article class="kds-card" draggable="true">
+        <div class="kds-card-header">
+          <span class="order-number" data-testid="kds-card-number">#0000</span>
+          <span class="elapsed" data-testid="kds-card-elapsed">00:00</span>
+        </div>
+        <div class="kds-card-body">
+          <div class="customer-name" data-testid="kds-card-name"></div>
+          <ul class="item-list" data-testid="kds-card-items"></ul>
+        </div>
+        <div class="kds-card-footer">
+          <button class="ghost prev" data-testid="kds-card-undo" aria-label="ひとつ前の状態に戻す">戻す</button>
+        </div>
+      </article>
+    </template>
+    <audio id="kds-feedback" preload="auto"></audio>
+    <script type="module" src="src/kds.js"></script>
+  </body>
+</html>

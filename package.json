@@ -1,0 +1,9 @@
+{
+  "name": "school-fes-pos",
+  "version": "1.0.0",
+  "description": "学園祭カフェ向け簡易POSフロントエンド",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js"
+  }
+}
