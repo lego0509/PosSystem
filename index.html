@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>学園祭カフェ POS</title>
+    <link rel="stylesheet" href="src/styles/common.css" />
+  </head>
+  <body class="redirect-body">
+    <div class="redirect-card">
+      <h1>学園祭カフェ POS システム</h1>
+      <p>利用する画面を選択してください。</p>
+      <nav class="redirect-nav">
+        <a data-testid="nav-pos" href="/pos">注文入力（レジ）</a>
+        <a data-testid="nav-kds" href="/kds">注文一覧（キッチン）</a>
+        <a data-testid="nav-call" href="/call">呼び出し（番号表示）</a>
+      </nav>
+    </div>
+    <script>
+      if (window.location.pathname === "/" && window.history && window.history.replaceState) {
+        const preferred = sessionStorage.getItem("pos-preferred-route");
+        if (preferred) {
+          window.location.replace(preferred);
+        }
+      }
+    </script>
+  </body>
+</html>
