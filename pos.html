@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>注文入力 - 学園祭カフェ POS</title>
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="icon" type="image/svg+xml" href="icons/icon-192.svg" />
+    <link rel="apple-touch-icon" href="icons/icon-512.svg" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="stylesheet" href="src/styles/common.css" />
+    <link rel="stylesheet" href="src/styles/pos.css" />
+  </head>
+  <body class="screen pos-screen">
+    <header class="screen-header">
+      <div>
+        <h1>注文入力</h1>
+        <p class="screen-subtitle">レジ担当者向け</p>
+      </div>
+      <div class="status-controls">
+        <label class="toggle">
+          <input type="checkbox" id="pause-toggle" data-testid="pos-pause-toggle" />
+          <span>受付一時停止</span>
+        </label>
+        <div id="pause-banner" class="pause-banner" aria-live="assertive">ただいま受付一時停止</div>
+      </div>
+    </header>
+    <main class="pos-layout">
+      <section class="category-panel" aria-label="商品カテゴリ">
+        <div class="category-grid" id="category-tabs" data-testid="pos-category-tabs"></div>
+        <div class="quick-quantity" id="quick-quantity" aria-live="polite">数量：1</div>
+      </section>
+      <section class="product-panel" aria-label="商品一覧">
+        <header class="panel-header">
+          <button id="product-prev" class="ghost" data-testid="pos-product-prev" aria-label="前の商品ページへ">◀</button>
+          <div class="pager-label" id="product-page-indicator" data-testid="pos-product-page">1 / 1</div>
+          <button id="product-next" class="ghost" data-testid="pos-product-next" aria-label="次の商品ページへ">▶</button>
+        </header>
+        <div class="product-grid" id="product-grid" data-testid="pos-product-grid"></div>
+      </section>
+      <section class="cart-panel" aria-label="カート">
+        <div class="customer-name-field">
+          <label for="customer-name">お客さんの名前（任意）</label>
+          <input id="customer-name" data-testid="pos-customer-name" type="text" placeholder="例：S.タロウ" />
+        </div>
+        <header class="panel-header">
+          <button id="cart-prev" class="ghost" data-testid="pos-cart-prev" aria-label="前のカートページへ">◀</button>
+          <div class="pager-label" id="cart-page-indicator" data-testid="pos-cart-page">1 / 1</div>
+          <button id="cart-next" class="ghost" data-testid="pos-cart-next" aria-label="次のカートページへ">▶</button>
+        </header>
+        <div class="cart-items" id="cart-items" data-testid="pos-cart-items"></div>
+        <div class="cart-actions">
+          <button data-testid="pos-undo-button" id="undo-button" class="ghost" aria-label="直前の追加を取り消す (Ctrl+Z)">取消 (Ctrl+Z)</button>
+          <button data-testid="pos-clear-button" id="clear-button" class="ghost" aria-label="全ての注文をクリア">全クリア</button>
+        </div>
+        <div class="cart-total" aria-live="polite">
+          <span>合計</span>
+          <strong id="cart-total" data-testid="pos-cart-total">¥0</strong>
+        </div>
+        <button id="confirm-button" class="primary" data-testid="pos-confirm-button" aria-label="会計確定 (Enter)">確定 (Enter)</button>
+        <div id="error-message" class="error-message" aria-live="assertive"></div>
+      </section>
+    </main>
+    <div id="option-modal" class="modal" aria-modal="true" role="dialog" hidden>
+      <div class="modal-content">
+        <header>
+          <h2 id="option-modal-title"></h2>
+          <button class="ghost" id="option-close" aria-label="オプション選択を閉じる">×</button>
+        </header>
+        <div id="option-modal-body"></div>
+        <footer>
+          <button id="option-cancel" class="ghost" data-testid="pos-option-cancel">キャンセル</button>
+          <button id="option-apply" class="primary" data-testid="pos-option-apply">追加する</button>
+        </footer>
+      </div>
+    </div>
+    <div id="order-number-modal" class="modal" aria-modal="true" role="dialog" hidden>
+      <div class="modal-content number-modal">
+        <h2>注文番号</h2>
+        <p id="order-number-display" data-testid="pos-order-number" class="order-number-display">0000</p>
+        <p>番号札に記入してください。</p>
+        <button id="order-number-close" class="primary" data-testid="pos-order-number-close">次の注文へ</button>
+      </div>
+    </div>
+    <audio id="feedback-audio" preload="auto"></audio>
+    <script type="module" src="src/pos.js"></script>
+    <script type="module" src="src/register-sw.js"></script>
+  </body>
+</html>

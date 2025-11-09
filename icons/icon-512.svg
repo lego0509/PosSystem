@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Festival Cafe POS icon large</title>
+  <desc id="desc">Large format simplified cafe cup icon for the POS progressive web app</desc>
+  <rect width="512" height="512" rx="96" fill="#2563eb"/>
+  <g fill="#ffffff">
+    <path d="M144 170h264v134a76 76 0 0 1-76 76H220a76 76 0 0 1-76-76z"/>
+    <path d="M408 186h40a60 60 0 0 1 0 120h-40v-36h40a24 24 0 0 0 0-48h-40z"/>
+    <path d="M192 136c0-24 18-36 18-60s-18-36-18-60h44c0 24 18 36 18 60s-18 36-18 60zm128 0c0-24 18-36 18-60s-18-36-18-60h44c0 24 18 36 18 60s-18 36-18 60z"/>
+  </g>
+  <path d="M152 360h248v32a24 24 0 0 1-24 24H176a24 24 0 0 1-24-24z" fill="#1d4ed8"/>
+</svg>

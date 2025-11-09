@@ -1,0 +1,275 @@
+.kds-screen {
+  background: var(--bg-color);
+  color: var(--text-color);
+}
+
+.kds-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.kds-controls input,
+.kds-controls select {
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-color);
+  color: var(--text-color);
+  min-width: 200px;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.kds-main {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.kds-board {
+  flex: 1;
+  background: var(--surface-color);
+  border-radius: 24px;
+  padding: 1.2rem;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  height: calc(var(--viewport-height) - 150px);
+  min-height: 0;
+}
+
+.kds-grid {
+  flex: 1;
+  display: grid;
+  gap: 1rem;
+  overflow-y: auto;
+  padding-right: 0.4rem;
+  min-height: 0;
+}
+
+.kds-board[data-density="comfortable"] .kds-grid {
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  grid-auto-rows: minmax(240px, auto);
+}
+
+.kds-board[data-density="medium"] .kds-grid {
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-auto-rows: minmax(220px, auto);
+}
+
+.kds-board[data-density="compact"] .kds-grid {
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-auto-rows: minmax(200px, auto);
+}
+
+.kds-board.empty .kds-grid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kds-empty {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: rgba(17, 24, 39, 0.55);
+  text-align: center;
+}
+
+.kds-card {
+  background: var(--surface-color);
+  border-radius: 18px;
+  border: 2px solid rgba(17, 24, 39, 0.08);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  box-shadow: 0 15px 40px rgba(15, 23, 42, 0.08);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  min-height: 0;
+}
+
+.kds-card.no-advance {
+  cursor: default;
+}
+
+.kds-card:hover,
+.kds-card:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 20px 45px rgba(37, 99, 235, 0.15);
+}
+
+.kds-card-header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.kds-card .order-number {
+  font-size: clamp(2.4rem, 5vw, 3.3rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.status-chip {
+  justify-self: start;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.15);
+  color: var(--accent-strong);
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.kds-card[data-status="ready"] .status-chip {
+  background: rgba(22, 163, 74, 0.18);
+  color: var(--success);
+}
+
+.kds-card .elapsed {
+  font-size: 1.3rem;
+  font-variant-numeric: tabular-nums;
+  justify-self: end;
+}
+
+.kds-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-height: 0;
+}
+
+.kds-card .customer-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.kds-card .item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.kds-card .item-list li {
+  font-size: 1.05rem;
+  line-height: 1.35;
+}
+
+.option-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-left: 0.5rem;
+}
+
+.option-badge {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--accent-strong);
+}
+
+.option-badge.level-low {
+  background: #e0f2fe;
+  color: #1d4ed8;
+}
+
+.option-badge.level-medium {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.option-badge.level-high {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.option-badge.toggle-on {
+  background: rgba(37, 99, 235, 0.18);
+  color: var(--accent-strong);
+}
+
+.option-badge.toggle-off {
+  background: rgba(15, 23, 42, 0.08);
+  color: rgba(17, 24, 39, 0.6);
+}
+
+.item-note {
+  color: var(--danger);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.kds-card-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.kds-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.kds-board[data-density="compact"] .kds-card {
+  padding: 0.8rem;
+  gap: 0.6rem;
+}
+
+.kds-board[data-density="compact"] .kds-card .order-number {
+  font-size: clamp(2rem, 4vw, 2.8rem);
+}
+
+.kds-board[data-density="compact"] .kds-card .item-list li {
+  font-size: 0.95rem;
+}
+
+.kds-board[data-density="comfortable"] .kds-card .order-number {
+  font-size: clamp(2.6rem, 5vw, 3.6rem);
+}
+
+.kds-card[data-category="pancake"] {
+  border-color: rgba(250, 204, 21, 0.55);
+}
+
+.kds-card[data-category="crepe"] {
+  border-color: rgba(74, 222, 128, 0.5);
+}
+
+.kds-card[data-category="sausage"] {
+  border-color: rgba(248, 113, 113, 0.5);
+}
+
+.kds-card[data-category="drink"] {
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.kds-card[data-status="ready"] {
+  box-shadow: 0 18px 40px rgba(22, 163, 74, 0.18);
+}
+
+.kds-actions button {
+  min-width: 120px;
+}
+
+.kds-board[data-density="compact"] .kds-actions button {
+  min-width: 96px;
+  padding: 0.7rem 1rem;
+}
+
+@media (max-width: 1280px) {
+  .kds-board {
+    height: auto;
+  }
+
+  .kds-grid {
+    max-height: none;
+  }
+}
