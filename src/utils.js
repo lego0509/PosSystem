@@ -1,3 +1,25 @@
+let viewportInitialized = false;
+
+function updateViewportUnits() {
+  const height = window.innerHeight;
+  document.documentElement.style.setProperty("--viewport-height", `${height}px`);
+}
+
+export function initializeViewportUnits() {
+  if (viewportInitialized) return;
+  viewportInitialized = true;
+  updateViewportUnits();
+  window.addEventListener("resize", updateViewportUnits);
+  window.addEventListener("orientationchange", updateViewportUnits);
+  window.addEventListener("pageshow", updateViewportUnits);
+  window.addEventListener("pagehide", () => {
+    window.removeEventListener("resize", updateViewportUnits);
+    window.removeEventListener("orientationchange", updateViewportUnits);
+    window.removeEventListener("pageshow", updateViewportUnits);
+    viewportInitialized = false;
+  });
+}
+
 export function formatCurrency(value) {
   return `¥${value.toLocaleString("ja-JP")}`;
 }

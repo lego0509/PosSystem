@@ -7,9 +7,16 @@ import {
   listenCatalog,
   ensureCatalogReady
 } from "./data.js";
-import { formatCurrency, createAudioPlayer, FEEDBACK_SOUND } from "./utils.js";
+import {
+  formatCurrency,
+  createAudioPlayer,
+  FEEDBACK_SOUND,
+  initializeViewportUnits,
+} from "./utils.js";
 
 sessionStorage.setItem("pos-preferred-route", "/catalog");
+
+initializeViewportUnits();
 
 const categoryMap = new Map(CATEGORIES.map((category, index) => [category.id, { ...category, order: index }]));
 

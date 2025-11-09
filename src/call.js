@@ -1,5 +1,5 @@
 import { getOrders, updateOrderStatus, updateOrder, listenStorage, markReadyAcknowledged } from "./storage.js";
-import { createAudioPlayer, FEEDBACK_SOUND } from "./utils.js";
+import { createAudioPlayer, FEEDBACK_SOUND, initializeViewportUnits } from "./utils.js";
 
 const readyGrid = document.getElementById("call-ready-grid");
 const historyContainer = document.getElementById("call-history");
@@ -8,6 +8,8 @@ const fullscreenButton = document.getElementById("call-fullscreen");
 const feedbackAudio = document.getElementById("call-feedback");
 
 sessionStorage.setItem("pos-preferred-route", "/call");
+
+initializeViewportUnits();
 
 const playFeedback = createAudioPlayer(feedbackAudio, FEEDBACK_SOUND);
 

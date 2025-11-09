@@ -1,18 +1,33 @@
 import { CATEGORIES, getAllProducts, listenCatalog, ensureCatalogReady } from "./data.js";
 import { getOrders, updateOrderStatus, updateOrder, listenStorage } from "./storage.js";
-import { formatElapsed, createAudioPlayer, FEEDBACK_SOUND, shortCategoryLabel } from "./utils.js";
+import {
+  formatElapsed,
+  createAudioPlayer,
+  FEEDBACK_SOUND,
+  shortCategoryLabel,
+  initializeViewportUnits,
+} from "./utils.js";
 
 const STATUS_FLOW = ["queued", "in_progress", "ready"];
-
-const columnElements = {
-  queued: document.getElementById("kds-queued"),
-  in_progress: document.getElementById("kds-in-progress"),
-  ready: document.getElementById("kds-ready")
+const STATUS_LABELS = {
+  queued: "待ち",
+  in_progress: "調理中",
+  ready: "完成"
 };
+const ACTION_LABELS = {
+  queued: "調理開始",
+  in_progress: "完成",
+  ready: "完了済"
+};
+
+initializeViewportUnits();
 
 const searchInput = document.getElementById("kds-search");
 const filterSelect = document.getElementById("kds-category-filter");
+const densitySelect = document.getElementById("kds-density");
 const refreshButton = document.getElementById("kds-refresh");
+const boardElement = document.getElementById("kds-board");
+const gridElement = document.getElementById("kds-grid");
 const cardTemplate = document.getElementById("kds-card-template");
 const feedbackAudio = document.getElementById("kds-feedback");
 
@@ -88,12 +103,15 @@ function renderOrderCard(order) {
   clone.setAttribute("tabindex", "0");
 
   const numberEl = clone.querySelector("[data-testid='kds-card-number']");
+  const statusEl = clone.querySelector("[data-testid='kds-card-status']");
   const elapsedEl = clone.querySelector("[data-testid='kds-card-elapsed']");
   const nameEl = clone.querySelector("[data-testid='kds-card-name']");
   const itemsEl = clone.querySelector("[data-testid='kds-card-items']");
+  const advanceBtn = clone.querySelector("[data-testid='kds-card-advance']");
   const undoBtn = clone.querySelector("[data-testid='kds-card-undo']");
 
   numberEl.textContent = `#${order.number}`;
+  statusEl.textContent = STATUS_LABELS[order.status] || order.status;
   elapsedEl.textContent = formatElapsed(order.createdAt);
   if (order.customerName) {
     nameEl.textContent = order.customerName;
@@ -120,22 +138,32 @@ function renderOrderCard(order) {
     itemsEl.appendChild(li);
   });
 
-  clone.addEventListener("click", () => {
-    advanceStatus(order).catch((error) => console.error(error));
-  });
-  clone.addEventListener("keydown", (event) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
+  const advanceDisabled = STATUS_FLOW.indexOf(order.status) === STATUS_FLOW.length - 1;
+  advanceBtn.textContent = ACTION_LABELS[order.status] || "次へ";
+  advanceBtn.disabled = advanceDisabled;
+  clone.classList.toggle("no-advance", advanceDisabled);
+
+  advanceBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
+    if (!advanceDisabled) {
       advanceStatus(order).catch((error) => console.error(error));
     }
   });
 
-  clone.addEventListener("dragstart", (event) => {
-    clone.classList.add("dragging");
-    event.dataTransfer.setData("text/plain", order.id);
+  clone.addEventListener("click", (event) => {
+    if (event.target.closest("button")) {
+      return;
+    }
+    if (!advanceDisabled) {
+      advanceStatus(order).catch((error) => console.error(error));
+    }
   });
-  clone.addEventListener("dragend", () => {
-    clone.classList.remove("dragging");
+
+  clone.addEventListener("keydown", (event) => {
+    if ((event.key === "Enter" || event.key === " ") && !advanceDisabled) {
+      event.preventDefault();
+      advanceStatus(order).catch((error) => console.error(error));
+    }
   });
 
   undoBtn.addEventListener("click", (event) => {
@@ -146,30 +174,43 @@ function renderOrderCard(order) {
   return clone;
 }
 
-function clearColumns() {
-  Object.values(columnElements).forEach((column) => {
-    column.innerHTML = "";
-  });
-}
-
 function renderBoard() {
-  clearColumns();
+  if (!gridElement || !boardElement) return;
   const searchValue = searchInput.value.trim();
   const filter = filterSelect.value;
+  const density = densitySelect?.value || "medium";
+  boardElement.dataset.density = density;
 
-  const filtered = currentOrders.filter((order) => {
-    const matchesSearch = !searchValue
-      ? true
-      : order.number.includes(searchValue) || (order.customerName || "").includes(searchValue);
-    const matchesFilter = filter === "all" ? true : order.items.some((item) => item.category === filter);
-    return matchesSearch && matchesFilter;
-  });
+  const filtered = currentOrders
+    .filter((order) => {
+      const matchesSearch = !searchValue
+        ? true
+        : order.number.includes(searchValue) || (order.customerName || "").includes(searchValue);
+      const matchesFilter = filter === "all" ? true : order.items.some((item) => item.category === filter);
+      return matchesSearch && matchesFilter;
+    })
+    .sort((a, b) => {
+      const statusDiff = STATUS_FLOW.indexOf(a.status) - STATUS_FLOW.indexOf(b.status);
+      if (statusDiff !== 0) {
+        return statusDiff;
+      }
+      return a.createdAt - b.createdAt;
+    });
+
+  gridElement.innerHTML = "";
+  boardElement.classList.toggle("empty", filtered.length === 0);
+
+  if (!filtered.length) {
+    const empty = document.createElement("div");
+    empty.className = "kds-empty";
+    empty.textContent = "現在表示する注文はありません";
+    gridElement.appendChild(empty);
+    return;
+  }
 
   filtered.forEach((order) => {
-    const column = columnElements[order.status];
-    if (!column) return;
     const card = renderOrderCard(order);
-    column.appendChild(card);
+    gridElement.appendChild(card);
   });
 }
 
@@ -206,44 +247,10 @@ async function revertStatus(order) {
   }
 }
 
-function setupDragAndDrop() {
-  Object.entries(columnElements).forEach(([status, column]) => {
-    column.addEventListener("dragover", (event) => {
-      event.preventDefault();
-      column.classList.add("drop-target");
-    });
-    column.addEventListener("dragleave", () => {
-      column.classList.remove("drop-target");
-    });
-    column.addEventListener("drop", (event) => {
-      event.preventDefault();
-      column.classList.remove("drop-target");
-      const orderId = event.dataTransfer.getData("text/plain");
-      const order = currentOrders.find((o) => o.id === orderId);
-      if (!order || order.status === status) return;
-      const allowedIndex = STATUS_FLOW.indexOf(status);
-      const currentIndex = STATUS_FLOW.indexOf(order.status);
-      if (allowedIndex === currentIndex + 1 || allowedIndex === currentIndex - 1 || status === "queued") {
-        updateOrderStatus(order.id, status)
-          .then(() => {
-            playFeedback();
-            return loadOrders();
-          })
-          .then(() => {
-            renderBoard();
-          })
-          .catch((error) => {
-            console.error("ドラッグでの状態変更に失敗しました", error);
-          });
-      }
-    });
-  });
-}
-
 function startTimer() {
   if (timerInterval) clearInterval(timerInterval);
   timerInterval = setInterval(() => {
-    document.querySelectorAll("[data-testid='kds-card-elapsed']").forEach((el) => {
+    gridElement.querySelectorAll("[data-testid='kds-card-elapsed']").forEach((el) => {
       const card = el.closest(".kds-card");
       const orderId = card?.dataset.id;
       const order = currentOrders.find((o) => o.id === orderId);
@@ -261,6 +268,7 @@ async function refreshBoard() {
 
 searchInput.addEventListener("input", renderBoard);
 filterSelect.addEventListener("change", renderBoard);
+densitySelect?.addEventListener("change", renderBoard);
 refreshButton.addEventListener("click", () => {
   refreshBoard().catch((error) => console.error(error));
 });
@@ -271,7 +279,6 @@ listenStorage(() => {
 
 async function init() {
   buildFilterOptions();
-  setupDragAndDrop();
   await ensureCatalogReady();
   refreshProductMap();
   await refreshBoard();

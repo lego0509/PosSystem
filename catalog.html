@@ -4,6 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>商品管理 - 学園祭カフェ POS</title>
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="icon" type="image/svg+xml" href="icons/icon-192.svg" />
+    <link rel="apple-touch-icon" href="icons/icon-512.svg" />
+    <link rel="manifest" href="manifest.webmanifest" />
     <link rel="stylesheet" href="src/styles/common.css" />
     <link rel="stylesheet" href="src/styles/catalog.css" />
   </head>
@@ -158,5 +165,6 @@
     </main>
     <audio id="catalog-feedback-audio" preload="auto"></audio>
     <script type="module" src="src/catalog.js"></script>
+    <script type="module" src="src/register-sw.js"></script>
   </body>
 </html>

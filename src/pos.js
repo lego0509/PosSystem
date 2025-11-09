@@ -1,11 +1,25 @@
 import { CATEGORIES, getAllProducts, listenCatalog, ensureCatalogReady } from "./data.js";
 import { addOrder, getPause, setPause, listenStorage } from "./storage.js";
-import { formatCurrency, summarizeOptions, createAudioPlayer, FEEDBACK_SOUND } from "./utils.js";
+import {
+  formatCurrency,
+  summarizeOptions,
+  createAudioPlayer,
+  FEEDBACK_SOUND,
+  initializeViewportUnits,
+} from "./utils.js";
+
+initializeViewportUnits();
 
 const categoryTabs = document.getElementById("category-tabs");
 const productGrid = document.getElementById("product-grid");
 const cartContainer = document.getElementById("cart-items");
 const customerNameInput = document.getElementById("customer-name");
+const productPrevButton = document.getElementById("product-prev");
+const productNextButton = document.getElementById("product-next");
+const productPageIndicator = document.getElementById("product-page-indicator");
+const cartPrevButton = document.getElementById("cart-prev");
+const cartNextButton = document.getElementById("cart-next");
+const cartPageIndicator = document.getElementById("cart-page-indicator");
 const undoButton = document.getElementById("undo-button");
 const clearButton = document.getElementById("clear-button");
 const totalDisplay = document.getElementById("cart-total");
@@ -29,6 +43,9 @@ sessionStorage.setItem("pos-preferred-route", "/pos");
 
 const playFeedback = createAudioPlayer(feedbackAudio, FEEDBACK_SOUND);
 
+const PRODUCTS_PER_PAGE = 6;
+const CART_ITEMS_PER_PAGE = 3;
+
 let currentCategory = CATEGORIES[0].id;
 let quickQuantity = 1;
 let cartItems = [];
@@ -36,6 +53,8 @@ let historyStack = [];
 let modalProduct = null;
 let modalSelections = {};
 let allProducts = [];
+let productPage = 0;
+let cartPage = 0;
 
 function setQuickQuantity(qty) {
   quickQuantity = Math.max(1, Math.min(9, qty));
@@ -83,10 +102,55 @@ function getProductsByCategory(categoryId) {
   return allProducts.filter((product) => product.category === categoryId);
 }
 
+function updateProductPager(totalProducts) {
+  const totalPages = Math.max(1, Math.ceil(totalProducts / PRODUCTS_PER_PAGE));
+  productPage = Math.min(productPage, totalPages - 1);
+  productPage = Math.max(0, productPage);
+  if (totalProducts === 0) {
+    productPageIndicator.textContent = "0 / 0";
+  } else {
+    productPageIndicator.textContent = `${productPage + 1} / ${totalPages}`;
+  }
+  const disablePrev = productPage <= 0 || totalProducts === 0;
+  const disableNext = productPage >= totalPages - 1 || totalProducts === 0;
+  productPrevButton.disabled = disablePrev;
+  productNextButton.disabled = disableNext;
+  productPrevButton.setAttribute("aria-disabled", String(disablePrev));
+  productNextButton.setAttribute("aria-disabled", String(disableNext));
+}
+
+function updateCartPager(totalItems) {
+  const totalPages = Math.max(1, Math.ceil(totalItems / CART_ITEMS_PER_PAGE));
+  cartPage = Math.min(cartPage, totalPages - 1);
+  cartPage = Math.max(0, cartPage);
+  if (totalItems === 0) {
+    cartPageIndicator.textContent = "0 / 0";
+  } else {
+    cartPageIndicator.textContent = `${cartPage + 1} / ${totalPages}`;
+  }
+  const disablePrev = cartPage <= 0 || totalItems === 0;
+  const disableNext = cartPage >= totalPages - 1 || totalItems === 0;
+  cartPrevButton.disabled = disablePrev;
+  cartNextButton.disabled = disableNext;
+  cartPrevButton.setAttribute("aria-disabled", String(disablePrev));
+  cartNextButton.setAttribute("aria-disabled", String(disableNext));
+}
+
 function renderProducts() {
-  productGrid.innerHTML = "";
   const products = getProductsByCategory(currentCategory);
-  products.forEach((product) => {
+  updateProductPager(products.length);
+  productGrid.innerHTML = "";
+  productGrid.classList.toggle("empty", products.length === 0);
+  if (!products.length) {
+    const empty = document.createElement("div");
+    empty.textContent = "商品がありません";
+    productGrid.appendChild(empty);
+    return;
+  }
+
+  const start = productPage * PRODUCTS_PER_PAGE;
+  const visible = products.slice(start, start + PRODUCTS_PER_PAGE);
+  visible.forEach((product) => {
     const card = document.createElement("article");
     card.className = "product-card";
     const button = document.createElement("button");
@@ -113,10 +177,52 @@ function renderProducts() {
     card.appendChild(button);
     productGrid.appendChild(card);
   });
+
+  for (let index = visible.length; index < PRODUCTS_PER_PAGE; index += 1) {
+    const filler = document.createElement("div");
+    filler.className = "grid-filler";
+    productGrid.appendChild(filler);
+  }
 }
+
+function setProductPage(nextPage) {
+  const products = getProductsByCategory(currentCategory);
+  const totalPages = Math.max(1, Math.ceil(products.length / PRODUCTS_PER_PAGE));
+  const newPage = Math.min(Math.max(nextPage, 0), Math.max(totalPages - 1, 0));
+  if (newPage !== productPage) {
+    productPage = newPage;
+    renderProducts();
+  }
+}
+
+function setCartPage(nextPage) {
+  const totalPages = Math.max(1, Math.ceil(cartItems.length / CART_ITEMS_PER_PAGE));
+  const newPage = Math.min(Math.max(nextPage, 0), Math.max(totalPages - 1, 0));
+  if (newPage !== cartPage) {
+    cartPage = newPage;
+    renderCart();
+  }
+}
+
+productPrevButton.addEventListener("click", () => {
+  setProductPage(productPage - 1);
+});
+
+productNextButton.addEventListener("click", () => {
+  setProductPage(productPage + 1);
+});
+
+cartPrevButton.addEventListener("click", () => {
+  setCartPage(cartPage - 1);
+});
+
+cartNextButton.addEventListener("click", () => {
+  setCartPage(cartPage + 1);
+});
 
 function switchCategory(categoryId) {
   currentCategory = categoryId;
+  productPage = 0;
   updateCategoryButtons();
   renderProducts();
 }
@@ -127,6 +233,7 @@ function refreshProducts(nextProducts) {
     currentCategory = CATEGORIES[0].id;
     updateCategoryButtons();
   }
+  updateProductPager(getProductsByCategory(currentCategory).length);
   renderProducts();
   syncCartWithProducts();
 }
@@ -174,6 +281,7 @@ function addCartItem(product, selections, quantity) {
       optionSummary: summary,
       note: ""
     });
+    cartPage = Math.max(0, Math.ceil(cartItems.length / CART_ITEMS_PER_PAGE) - 1);
   }
   playFeedback();
   renderCart();
@@ -181,9 +289,23 @@ function addCartItem(product, selections, quantity) {
 
 function renderCart() {
   cartContainer.innerHTML = "";
-  let total = 0;
-  cartItems.forEach((item, index) => {
-    total += item.price * item.quantity;
+  const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  updateCartPager(cartItems.length);
+  cartContainer.classList.toggle("empty", cartItems.length === 0);
+
+  if (!cartItems.length) {
+    const empty = document.createElement("div");
+    empty.textContent = "カートは空です";
+    cartContainer.appendChild(empty);
+    totalDisplay.textContent = formatCurrency(total);
+    confirmButton.disabled = shouldDisableConfirm();
+    return;
+  }
+
+  const start = cartPage * CART_ITEMS_PER_PAGE;
+  const visible = cartItems.slice(start, start + CART_ITEMS_PER_PAGE);
+  visible.forEach((item, visibleIndex) => {
+    const index = start + visibleIndex;
     const row = document.createElement("div");
     row.className = "cart-item";
     row.setAttribute("data-testid", `pos-cart-item-${index}`);
@@ -211,10 +333,10 @@ function renderCart() {
     noteInput.placeholder = "メモ (任意)";
     noteInput.value = item.note;
     noteInput.className = "item-note-input";
-    noteInput.rows = 1;
+    noteInput.rows = 2;
     noteInput.setAttribute("data-testid", `pos-cart-note-${index}`);
     noteInput.addEventListener("input", (event) => {
-      item.note = event.target.value;
+      cartItems[index].note = event.target.value;
     });
     header.appendChild(noteInput);
 
@@ -227,13 +349,13 @@ function renderCart() {
     minus.type = "button";
     minus.textContent = "-";
     minus.setAttribute("aria-label", `${item.name} を1つ減らす`);
-    minus.addEventListener("click", () => updateItemQuantity(index, item.quantity - 1));
+    minus.addEventListener("click", () => updateItemQuantity(index, cartItems[index].quantity - 1));
 
     const plus = document.createElement("button");
     plus.type = "button";
     plus.textContent = "+";
     plus.setAttribute("aria-label", `${item.name} を1つ増やす`);
-    plus.addEventListener("click", () => updateItemQuantity(index, item.quantity + 1));
+    plus.addEventListener("click", () => updateItemQuantity(index, cartItems[index].quantity + 1));
 
     const qtyLabel = document.createElement("span");
     qtyLabel.textContent = item.quantity.toString();
@@ -260,6 +382,13 @@ function renderCart() {
     row.appendChild(controls);
     cartContainer.appendChild(row);
   });
+
+  for (let index = visible.length; index < CART_ITEMS_PER_PAGE; index += 1) {
+    const filler = document.createElement("div");
+    filler.className = "grid-filler";
+    cartContainer.appendChild(filler);
+  }
+
   totalDisplay.textContent = formatCurrency(total);
   confirmButton.disabled = shouldDisableConfirm();
 }
@@ -270,6 +399,7 @@ function updateItemQuantity(index, quantity) {
   pushHistory();
   if (quantity <= 0) {
     cartItems.splice(index, 1);
+    cartPage = Math.min(cartPage, Math.max(0, Math.ceil(cartItems.length / CART_ITEMS_PER_PAGE) - 1));
   } else {
     item.quantity = quantity;
   }
@@ -279,6 +409,7 @@ function updateItemQuantity(index, quantity) {
 function removeItem(index) {
   pushHistory();
   cartItems.splice(index, 1);
+  cartPage = Math.min(cartPage, Math.max(0, Math.ceil(cartItems.length / CART_ITEMS_PER_PAGE) - 1));
   renderCart();
 }
 
@@ -449,6 +580,7 @@ function shouldDisableConfirm() {
 function resetCart() {
   cartItems = [];
   historyStack = [];
+  cartPage = 0;
   renderCart();
 }
 
@@ -506,6 +638,7 @@ clearButton.addEventListener("click", () => {
   }
   cartItems = [];
   historyStack = [];
+  cartPage = 0;
   renderCart();
 });
 
@@ -568,6 +701,28 @@ function handleKeyShortcuts(event) {
       setQuickQuantity(Number(event.key));
       event.preventDefault();
       return;
+    }
+    if (!isTyping) {
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        setProductPage(productPage - 1);
+        return;
+      }
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        setProductPage(productPage + 1);
+        return;
+      }
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+        setCartPage(cartPage - 1);
+        return;
+      }
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        setCartPage(cartPage + 1);
+        return;
+      }
     }
   }
 

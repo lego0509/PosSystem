@@ -4,6 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>キッチン進行 - 学園祭カフェ POS</title>
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="icon" type="image/svg+xml" href="icons/icon-192.svg" />
+    <link rel="apple-touch-icon" href="icons/icon-512.svg" />
+    <link rel="manifest" href="manifest.webmanifest" />
     <link rel="stylesheet" href="src/styles/common.css" />
     <link rel="stylesheet" href="src/styles/kds.css" />
   </head>
@@ -18,27 +25,24 @@
         <select id="kds-category-filter" data-testid="kds-category-filter" aria-label="カテゴリフィルタ">
           <option value="all">すべて</option>
         </select>
+        <select id="kds-density" data-testid="kds-density" aria-label="表示密度">
+          <option value="medium">標準表示</option>
+          <option value="comfortable">ゆったり表示</option>
+          <option value="compact">一覧表示</option>
+        </select>
         <button id="kds-refresh" class="ghost" data-testid="kds-refresh" aria-label="最新状態を読み込む">更新</button>
       </div>
     </header>
-    <main class="kds-board" aria-label="注文ボード">
-      <section class="kds-column" data-status="queued" aria-label="待ち">
-        <header>待ち</header>
-        <div class="kds-column-body" id="kds-queued" data-testid="kds-queued"></div>
-      </section>
-      <section class="kds-column" data-status="in_progress" aria-label="調理中">
-        <header>調理中</header>
-        <div class="kds-column-body" id="kds-in-progress" data-testid="kds-in-progress"></div>
-      </section>
-      <section class="kds-column" data-status="ready" aria-label="完成">
-        <header>完成</header>
-        <div class="kds-column-body" id="kds-ready" data-testid="kds-ready"></div>
-      </section>
+    <main class="kds-main" aria-label="注文一覧">
+      <div id="kds-board" class="kds-board" data-testid="kds-board" data-density="medium">
+        <div class="kds-grid" id="kds-grid" data-testid="kds-grid"></div>
+      </div>
     </main>
     <template id="kds-card-template">
-      <article class="kds-card" draggable="true">
+      <article class="kds-card" tabindex="0">
         <div class="kds-card-header">
           <span class="order-number" data-testid="kds-card-number">#0000</span>
+          <span class="status-chip" data-testid="kds-card-status">待ち</span>
           <span class="elapsed" data-testid="kds-card-elapsed">00:00</span>
         </div>
         <div class="kds-card-body">
@@ -46,11 +50,15 @@
           <ul class="item-list" data-testid="kds-card-items"></ul>
         </div>
         <div class="kds-card-footer">
-          <button class="ghost prev" data-testid="kds-card-undo" aria-label="ひとつ前の状態に戻す">戻す</button>
+          <div class="kds-actions">
+            <button class="primary" data-testid="kds-card-advance" aria-label="次の状態に進める">次へ</button>
+            <button class="ghost" data-testid="kds-card-undo" aria-label="ひとつ前の状態に戻す">戻す</button>
+          </div>
         </div>
       </article>
     </template>
     <audio id="kds-feedback" preload="auto"></audio>
     <script type="module" src="src/kds.js"></script>
+    <script type="module" src="src/register-sw.js"></script>
   </body>
 </html>
