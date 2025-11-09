@@ -1,5 +1,5 @@
-import { CATEGORIES, getAllProducts, listenCatalog } from "./data.js";
-import { addOrder, getPause, setPause, getNextOrderNumber, listenStorage } from "./storage.js";
+import { CATEGORIES, getAllProducts, listenCatalog, ensureCatalogReady } from "./data.js";
+import { addOrder, getPause, setPause, listenStorage } from "./storage.js";
 import { formatCurrency, summarizeOptions, createAudioPlayer, FEEDBACK_SOUND } from "./utils.js";
 
 const categoryTabs = document.getElementById("category-tabs");
@@ -121,8 +121,8 @@ function switchCategory(categoryId) {
   renderProducts();
 }
 
-function refreshProducts() {
-  allProducts = getAllProducts();
+function refreshProducts(nextProducts) {
+  allProducts = nextProducts ?? getAllProducts();
   if (!allProducts.some((product) => product.category === currentCategory)) {
     currentCategory = CATEGORIES[0].id;
     updateCategoryButtons();
@@ -452,9 +452,10 @@ function resetCart() {
   renderCart();
 }
 
-function handleConfirm() {
+async function handleConfirm() {
   if (shouldDisableConfirm()) return;
-  const orderNumber = getNextOrderNumber();
+  confirmButton.disabled = true;
+  confirmButton.setAttribute("aria-busy", "true");
   const now = Date.now();
   const customerName = customerNameInput.value.trim();
   const orderItems = cartItems.map((item) => ({
@@ -469,26 +470,31 @@ function handleConfirm() {
   }));
   const total = orderItems.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0);
   const primaryCategory = orderItems[0]?.category ?? "pancake";
-  addOrder({
-    id: orderNumber,
-    number: orderNumber,
-    status: "queued",
-    createdAt: now,
-    updatedAt: now,
-    statusHistory: [{ status: "queued", at: now }],
-    customerName,
-    items: orderItems,
-    total,
-    primaryCategory
-  });
-  playFeedback();
-  orderNumberDisplay.textContent = orderNumber;
-  orderNumberModal.hidden = false;
-  resetCart();
-  customerNameInput.value = "";
+  try {
+    const created = await addOrder({
+      customerName,
+      items: orderItems,
+      total,
+      primaryCategory
+    });
+    playFeedback();
+    orderNumberDisplay.textContent = created.number;
+    orderNumberModal.hidden = false;
+    resetCart();
+    customerNameInput.value = "";
+    errorMessage.textContent = "";
+  } catch (error) {
+    console.error("注文の登録に失敗しました", error);
+    errorMessage.textContent = "注文の登録に失敗しました。通信状況を確認してください。";
+  } finally {
+    confirmButton.removeAttribute("aria-busy");
+    confirmButton.disabled = shouldDisableConfirm();
+  }
 }
 
-confirmButton.addEventListener("click", handleConfirm);
+confirmButton.addEventListener("click", () => {
+  handleConfirm().catch((error) => console.error(error));
+});
 
 undoButton.addEventListener("click", () => {
   restoreHistory();
@@ -503,11 +509,21 @@ clearButton.addEventListener("click", () => {
   renderCart();
 });
 
-pauseToggle.addEventListener("change", (event) => {
-  const paused = event.target.checked;
-  setPause(paused);
-  pauseBanner.classList.toggle("active", paused);
-  confirmButton.disabled = shouldDisableConfirm();
+pauseToggle.addEventListener("change", async (event) => {
+  const desired = event.target.checked;
+  pauseToggle.disabled = true;
+  try {
+    const updatedPause = await setPause(desired);
+    pauseToggle.checked = updatedPause;
+    pauseBanner.classList.toggle("active", updatedPause);
+  } catch (error) {
+    console.error("受付一時停止の更新に失敗しました", error);
+    pauseToggle.checked = !desired;
+    pauseBanner.classList.toggle("active", pauseToggle.checked);
+  } finally {
+    pauseToggle.disabled = false;
+    confirmButton.disabled = shouldDisableConfirm();
+  }
 });
 
 listenStorage((state) => {
@@ -516,10 +532,16 @@ listenStorage((state) => {
   confirmButton.disabled = shouldDisableConfirm();
 });
 
-function initPauseState() {
-  const paused = getPause();
-  pauseToggle.checked = paused;
-  pauseBanner.classList.toggle("active", paused);
+async function initPauseState() {
+  try {
+    const paused = await getPause();
+    pauseToggle.checked = paused;
+    pauseBanner.classList.toggle("active", paused);
+  } catch (error) {
+    console.error("休止状態の取得に失敗しました", error);
+    pauseToggle.checked = false;
+    pauseBanner.classList.remove("active");
+  }
   confirmButton.disabled = shouldDisableConfirm();
 }
 
@@ -531,7 +553,7 @@ function handleKeyShortcuts(event) {
   const isTyping = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA");
   if (event.key === "Enter" && !event.shiftKey && !event.altKey && !event.ctrlKey) {
     event.preventDefault();
-    handleConfirm();
+    handleConfirm().catch((error) => console.error(error));
     return;
   }
 
@@ -571,14 +593,17 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
-function init() {
+async function init() {
   buildCategoryTabs();
+  await ensureCatalogReady();
   refreshProducts();
   renderCart();
-  initPauseState();
-  listenCatalog(() => {
-    refreshProducts();
+  await initPauseState();
+  listenCatalog((products) => {
+    refreshProducts(products);
   });
 }
 
-init();
+init().catch((error) => {
+  console.error("POS init failed", error);
+});

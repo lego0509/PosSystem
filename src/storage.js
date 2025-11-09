@@ -1,109 +1,168 @@
-const STORAGE_KEY = "school-fes-pos-state";
+const API_BASE = "";
 
-const defaultState = {
-  currentOrderNumber: 0,
-  orders: [],
-  pause: false
-};
+let pauseState = false;
+let ordersState = [];
+let initialized = false;
+let initPromise = null;
+let pollTimerId = null;
+const storageListeners = new Set();
 
-function clone(data) {
-  return JSON.parse(JSON.stringify(data));
+async function requestJSON(path, options = {}) {
+  const { headers, ...rest } = options;
+  const response = await fetch(`${API_BASE}${path}`, {
+    headers: { "Content-Type": "application/json", Accept: "application/json", ...(headers || {}) },
+    ...rest
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Request failed: ${response.status} ${text}`);
+  }
+  const contentType = response.headers.get("content-type") || "";
+  if (contentType.includes("application/json")) {
+    return response.json();
+  }
+  return null;
 }
 
-function getState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return clone(defaultState);
-    const parsed = JSON.parse(raw);
-    return { ...clone(defaultState), ...parsed, orders: parsed.orders || [] };
-  } catch (error) {
-    console.warn("Failed to parse state", error);
-    return clone(defaultState);
+function cloneOrders() {
+  return ordersState.map((order) => ({
+    ...order,
+    items: (order.items || []).map((item) => ({ ...item })),
+    statusHistory: Array.isArray(order.statusHistory)
+      ? order.statusHistory.map((entry) => ({ ...entry }))
+      : []
+  }));
+}
+
+function notifyListeners() {
+  const snapshot = {
+    pause: pauseState,
+    orders: cloneOrders()
+  };
+  storageListeners.forEach((listener) => {
+    try {
+      listener(snapshot);
+    } catch (error) {
+      console.error("storage listener failed", error);
+    }
+  });
+}
+
+async function refreshPause() {
+  const data = await requestJSON("/api/state", { method: "GET" });
+  const nextPause = Boolean(data?.pause);
+  if (nextPause !== pauseState) {
+    pauseState = nextPause;
+    notifyListeners();
+  } else if (!initialized) {
+    pauseState = nextPause;
   }
 }
 
-function saveState(state) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+function ordersEqual(a, b) {
+  return JSON.stringify(a) === JSON.stringify(b);
 }
 
-export function getPause() {
-  return getState().pause;
+async function refreshOrders() {
+  const data = await requestJSON("/api/orders", { method: "GET" });
+  const sorted = (data?.orders || []).slice().sort((a, b) => a.createdAt - b.createdAt);
+  if (!ordersEqual(ordersState, sorted)) {
+    ordersState = sorted;
+    notifyListeners();
+  } else if (!initialized) {
+    ordersState = sorted;
+  }
 }
 
-export function setPause(value) {
-  const state = getState();
-  state.pause = value;
-  saveState(state);
+async function ensureInitialized() {
+  if (initialized) return;
+  if (!initPromise) {
+    initPromise = (async () => {
+      await Promise.all([refreshPause(), refreshOrders()]);
+      initialized = true;
+      startPolling();
+    })().finally(() => {
+      initPromise = null;
+    });
+  }
+  await initPromise;
 }
 
-export function getNextOrderNumber() {
-  const state = getState();
-  state.currentOrderNumber = (state.currentOrderNumber % 9999) + 1;
-  saveState(state);
-  return state.currentOrderNumber.toString().padStart(4, "0");
+function startPolling() {
+  if (typeof window === "undefined") return;
+  if (pollTimerId) return;
+  pollTimerId = window.setInterval(() => {
+    refreshPause().catch((error) => console.error(error));
+    refreshOrders().catch((error) => console.error(error));
+  }, 1500);
 }
 
-export function addOrder(order) {
-  const state = getState();
-  state.orders.push(order);
-  saveState(state);
-  return order;
+export async function getPause() {
+  await ensureInitialized();
+  return pauseState;
 }
 
-export function getOrders() {
-  const state = getState();
-  return state.orders.sort((a, b) => a.createdAt - b.createdAt);
-}
-
-export function updateOrder(orderId, updater) {
-  const state = getState();
-  const idx = state.orders.findIndex((o) => o.id === orderId);
-  if (idx === -1) return null;
-  const updated = typeof updater === "function" ? updater(state.orders[idx]) : { ...state.orders[idx], ...updater };
-  state.orders[idx] = { ...state.orders[idx], ...updated };
-  saveState(state);
-  return state.orders[idx];
-}
-
-export function updateOrderStatus(orderId, status) {
-  return updateOrder(orderId, (order) => {
-    const history = Array.isArray(order.statusHistory) ? order.statusHistory.slice() : [];
-    history.push({ status, at: Date.now() });
-    const updates = { status, statusHistory: history };
-    if (status === "ready") {
-      updates.readyAcknowledged = false;
-    }
-    if (status === "picked_up") {
-      updates.readyAcknowledged = true;
-    }
-    return { ...order, ...updates };
+export async function setPause(value) {
+  await requestJSON("/api/state/pause", {
+    method: "POST",
+    body: JSON.stringify({ pause: Boolean(value) })
   });
+  await refreshPause();
+  return pauseState;
 }
 
-export function bulkUpdateOrders(orders) {
-  const state = getState();
-  state.orders = orders;
-  saveState(state);
+export async function addOrder(orderPayload) {
+  const created = await requestJSON("/api/orders", {
+    method: "POST",
+    body: JSON.stringify(orderPayload)
+  });
+  await refreshOrders();
+  return created;
 }
 
-export function markReadyAcknowledged(orderId) {
+export async function getOrders() {
+  await ensureInitialized();
+  return cloneOrders();
+}
+
+export async function updateOrder(orderId, updates) {
+  const updated = await requestJSON(`/api/orders/${encodeURIComponent(orderId)}`, {
+    method: "PATCH",
+    body: JSON.stringify(updates)
+  });
+  await refreshOrders();
+  return updated;
+}
+
+export async function updateOrderStatus(orderId, status) {
+  const updated = await requestJSON(`/api/orders/${encodeURIComponent(orderId)}/status`, {
+    method: "POST",
+    body: JSON.stringify({ status })
+  });
+  await refreshOrders();
+  return updated;
+}
+
+export async function markReadyAcknowledged(orderId) {
   return updateOrder(orderId, { readyAcknowledged: true });
 }
 
-export function removeOrder(orderId) {
-  const state = getState();
-  state.orders = state.orders.filter((order) => order.id !== orderId);
-  saveState(state);
+export async function removeOrder(orderId) {
+  await requestJSON(`/api/orders/${encodeURIComponent(orderId)}`, { method: "DELETE" });
+  await refreshOrders();
 }
 
 export function listenStorage(callback) {
-  window.addEventListener("storage", (event) => {
-    if (event.key === STORAGE_KEY) {
-      callback(getState());
-    }
+  storageListeners.add(callback);
+  ensureInitialized().then(() => {
+    callback({ pause: pauseState, orders: cloneOrders() });
   });
+  return () => {
+    storageListeners.delete(callback);
+  };
 }
 
-export function clearAll() {
-  saveState(clone(defaultState));
+export async function clearAll() {
+  await requestJSON("/api/orders/clear", { method: "POST" });
+  await refreshOrders();
 }

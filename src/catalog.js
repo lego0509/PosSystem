@@ -4,7 +4,8 @@ import {
   saveCatalog,
   resetCatalog,
   getOptionTemplates,
-  listenCatalog
+  listenCatalog,
+  ensureCatalogReady
 } from "./data.js";
 import { formatCurrency, createAudioPlayer, FEEDBACK_SOUND } from "./utils.js";
 
@@ -49,8 +50,8 @@ let feedbackTimeoutId = null;
 let uploadedImageData = null;
 let uploadedImageName = "";
 
-function loadCatalogState() {
-  catalog = getCatalog();
+async function loadCatalogState() {
+  catalog = await ensureCatalogReady();
 }
 
 function defaultTemplateForCategory(category) {
@@ -456,7 +457,7 @@ function handleImageFileClear() {
   showFeedback("アップロード画像を解除しました", "success");
 }
 
-function handleSave(event) {
+async function handleSave(event) {
   event.preventDefault();
   const product = getProductFromForm();
   if (!product) return;
@@ -471,14 +472,19 @@ function handleSave(event) {
   } else {
     catalog.products.push(product);
   }
-  saveCatalog({ products: catalog.products });
-  playFeedback();
-  showFeedback("保存しました", "success");
-  renderProductList();
-  selectProduct(product.id);
+  try {
+    catalog = await saveCatalog({ products: catalog.products });
+    playFeedback();
+    showFeedback("保存しました", "success");
+    renderProductList();
+    selectProduct(product.id);
+  } catch (error) {
+    console.error("商品の保存に失敗しました", error);
+    showFeedback("保存に失敗しました。通信環境をご確認ください。", "error");
+  }
 }
 
-function handleDelete(productId = selectedProductId) {
+async function handleDelete(productId = selectedProductId) {
   if (!productId) return;
   const product = catalog.products.find((item) => item.id === productId);
   if (!product) return;
@@ -486,22 +492,31 @@ function handleDelete(productId = selectedProductId) {
     return;
   }
   catalog.products = catalog.products.filter((item) => item.id !== productId);
-  saveCatalog({ products: catalog.products });
-  playFeedback();
-  showFeedback("削除しました", "success");
-  renderProductList();
-  startCreateProduct();
+  try {
+    catalog = await saveCatalog({ products: catalog.products });
+    playFeedback();
+    showFeedback("削除しました", "success");
+    renderProductList();
+    startCreateProduct();
+  } catch (error) {
+    console.error("商品の削除に失敗しました", error);
+    showFeedback("削除に失敗しました。再度お試しください。", "error");
+  }
 }
 
-function handleReset() {
+async function handleReset() {
   if (!window.confirm("初期の商品構成に戻しますか？")) {
     return;
   }
-  resetCatalog();
-  loadCatalogState();
-  renderProductList();
-  startCreateProduct();
-  showFeedback("初期データを読み込みました", "success");
+  try {
+    catalog = await resetCatalog();
+    renderProductList();
+    startCreateProduct();
+    showFeedback("初期データを読み込みました", "success");
+  } catch (error) {
+    console.error("初期化に失敗しました", error);
+    showFeedback("初期データの復元に失敗しました。", "error");
+  }
 }
 
 function handleCategoryChange() {
@@ -511,8 +526,8 @@ function handleCategoryChange() {
   updatePreview();
 }
 
-function init() {
-  loadCatalogState();
+async function init() {
+  await loadCatalogState();
   buildCategoryFilter();
   buildCategorySelect();
   buildTemplateSelect();
@@ -520,7 +535,9 @@ function init() {
   startCreateProduct();
   catalogSearch.addEventListener("input", renderProductList);
   catalogFilter.addEventListener("change", renderProductList);
-  catalogForm.addEventListener("submit", handleSave);
+  catalogForm.addEventListener("submit", (event) => {
+    handleSave(event).catch((error) => console.error(error));
+  });
   productNameInput.addEventListener("input", updatePreview);
   productPriceInput.addEventListener("input", updatePreview);
   productImageInput.addEventListener("input", updatePreview);
@@ -536,8 +553,12 @@ function init() {
     startCreateProduct();
     productIdInput.focus();
   });
-  resetButton.addEventListener("click", handleReset);
-  deleteButton.addEventListener("click", () => handleDelete());
+  resetButton.addEventListener("click", () => {
+    handleReset().catch((error) => console.error(error));
+  });
+  deleteButton.addEventListener("click", () => {
+    handleDelete().catch((error) => console.error(error));
+  });
   duplicateButton.addEventListener("click", () => {
     if (!selectedProductId) return;
     const product = catalog.products.find((item) => item.id === selectedProductId);
@@ -547,7 +568,7 @@ function init() {
     }
   });
   listenCatalog(() => {
-    loadCatalogState();
+    catalog = getCatalog();
     renderProductList();
     if (selectedProductId) {
       const exists = catalog.products.find((item) => item.id === selectedProductId);
@@ -560,4 +581,6 @@ function init() {
   });
 }
 
-init();
+init().catch((error) => {
+  console.error("Catalog init failed", error);
+});

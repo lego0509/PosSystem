@@ -1,4 +1,4 @@
-import { CATEGORIES, getAllProducts, listenCatalog } from "./data.js";
+import { CATEGORIES, getAllProducts, listenCatalog, ensureCatalogReady } from "./data.js";
 import { getOrders, updateOrderStatus, updateOrder, listenStorage } from "./storage.js";
 import { formatElapsed, createAudioPlayer, FEEDBACK_SOUND, shortCategoryLabel } from "./utils.js";
 
@@ -24,8 +24,9 @@ let currentOrders = [];
 let timerInterval = null;
 let productMap = new Map();
 
-function refreshProductMap() {
-  productMap = new Map(getAllProducts().map((product) => [product.id, product]));
+function refreshProductMap(products) {
+  const source = products ?? getAllProducts();
+  productMap = new Map(source.map((product) => [product.id, product]));
 }
 
 function buildFilterOptions() {
@@ -37,8 +38,14 @@ function buildFilterOptions() {
   });
 }
 
-function loadOrders() {
-  currentOrders = getOrders().filter((order) => order.status !== "picked_up");
+async function loadOrders() {
+  try {
+    const orders = await getOrders();
+    currentOrders = orders.filter((order) => order.status !== "picked_up");
+  } catch (error) {
+    console.error("注文情報の取得に失敗しました", error);
+    currentOrders = [];
+  }
 }
 
 function formatOptionBadges(item) {
@@ -113,11 +120,13 @@ function renderOrderCard(order) {
     itemsEl.appendChild(li);
   });
 
-  clone.addEventListener("click", () => advanceStatus(order));
+  clone.addEventListener("click", () => {
+    advanceStatus(order).catch((error) => console.error(error));
+  });
   clone.addEventListener("keydown", (event) => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
-      advanceStatus(order);
+      advanceStatus(order).catch((error) => console.error(error));
     }
   });
 
@@ -131,7 +140,7 @@ function renderOrderCard(order) {
 
   undoBtn.addEventListener("click", (event) => {
     event.stopPropagation();
-    revertStatus(order);
+    revertStatus(order).catch((error) => console.error(error));
   });
 
   return clone;
@@ -164,32 +173,37 @@ function renderBoard() {
   });
 }
 
-function advanceStatus(order) {
+async function advanceStatus(order) {
   const currentIndex = STATUS_FLOW.indexOf(order.status);
   if (currentIndex === -1 || currentIndex === STATUS_FLOW.length - 1) {
     return;
   }
   const nextStatus = STATUS_FLOW[currentIndex + 1];
-  updateOrderStatus(order.id, nextStatus);
-  playFeedback();
-  loadOrders();
-  renderBoard();
+  try {
+    await updateOrderStatus(order.id, nextStatus);
+    playFeedback();
+    await loadOrders();
+    renderBoard();
+  } catch (error) {
+    console.error("状態更新に失敗しました", error);
+  }
 }
 
-function revertStatus(order) {
+async function revertStatus(order) {
   if (!order.statusHistory || order.statusHistory.length < 2) return;
-  updateOrder(order.id, (data) => {
-    const history = data.statusHistory.slice(0, -1);
-    const previous = history[history.length - 1];
-    return {
-      ...data,
+  const history = order.statusHistory.slice(0, -1);
+  const previous = history[history.length - 1];
+  try {
+    await updateOrder(order.id, {
       status: previous.status,
       statusHistory: history
-    };
-  });
-  playFeedback();
-  loadOrders();
-  renderBoard();
+    });
+    playFeedback();
+    await loadOrders();
+    renderBoard();
+  } catch (error) {
+    console.error("状態を戻せませんでした", error);
+  }
 }
 
 function setupDragAndDrop() {
@@ -210,10 +224,17 @@ function setupDragAndDrop() {
       const allowedIndex = STATUS_FLOW.indexOf(status);
       const currentIndex = STATUS_FLOW.indexOf(order.status);
       if (allowedIndex === currentIndex + 1 || allowedIndex === currentIndex - 1 || status === "queued") {
-        updateOrderStatus(order.id, status);
-        playFeedback();
-        loadOrders();
-        renderBoard();
+        updateOrderStatus(order.id, status)
+          .then(() => {
+            playFeedback();
+            return loadOrders();
+          })
+          .then(() => {
+            renderBoard();
+          })
+          .catch((error) => {
+            console.error("ドラッグでの状態変更に失敗しました", error);
+          });
       }
     });
   });
@@ -233,29 +254,34 @@ function startTimer() {
   }, 1000);
 }
 
-function refreshBoard() {
-  loadOrders();
+async function refreshBoard() {
+  await loadOrders();
   renderBoard();
 }
 
 searchInput.addEventListener("input", renderBoard);
 filterSelect.addEventListener("change", renderBoard);
-refreshButton.addEventListener("click", refreshBoard);
-
-listenStorage(() => {
-  refreshBoard();
+refreshButton.addEventListener("click", () => {
+  refreshBoard().catch((error) => console.error(error));
 });
 
-function init() {
+listenStorage(() => {
+  refreshBoard().catch((error) => console.error(error));
+});
+
+async function init() {
   buildFilterOptions();
   setupDragAndDrop();
+  await ensureCatalogReady();
   refreshProductMap();
-  refreshBoard();
+  await refreshBoard();
   startTimer();
-  listenCatalog(() => {
-    refreshProductMap();
+  listenCatalog((products) => {
+    refreshProductMap(products);
     renderBoard();
   });
 }
 
-init();
+init().catch((error) => {
+  console.error("KDS init failed", error);
+});

@@ -13,8 +13,13 @@ const playFeedback = createAudioPlayer(feedbackAudio, FEEDBACK_SOUND);
 
 let selectedOrders = new Set();
 
-function loadOrders() {
-  return getOrders();
+async function loadOrders() {
+  try {
+    return await getOrders();
+  } catch (error) {
+    console.error("受け渡し表示の注文取得に失敗しました", error);
+    return [];
+  }
 }
 
 function renderReadyOrders(orders) {
@@ -50,7 +55,7 @@ function renderReadyOrders(orders) {
     button.setAttribute("data-testid", `call-ready-complete-${order.id}`);
     button.addEventListener("click", (event) => {
       event.stopPropagation();
-      markPickedUp(order);
+      markPickedUp(order).catch((error) => console.error(error));
     });
     card.appendChild(button);
 
@@ -70,7 +75,7 @@ function renderReadyOrders(orders) {
         setTimeout(() => card.classList.remove("highlight"), 2600);
       });
       playFeedback();
-      markReadyAcknowledged(order.id);
+      markReadyAcknowledged(order.id).catch((error) => console.error(error));
     }
   });
 
@@ -106,8 +111,8 @@ function renderHistory(orders) {
   });
 }
 
-function render() {
-  const orders = loadOrders();
+async function render() {
+  const orders = await loadOrders();
   renderReadyOrders(orders);
   renderHistory(orders);
 }
@@ -118,16 +123,20 @@ function toggleSelect(orderId) {
   } else {
     selectedOrders.add(orderId);
   }
-  render();
+  render().catch((error) => console.error(error));
 }
 
-function markPickedUp(order) {
+async function markPickedUp(order) {
   const now = Date.now();
-  updateOrderStatus(order.id, "picked_up");
-  updateOrder(order.id, { pickedUpAt: now });
-  selectedOrders.delete(order.id);
-  playFeedback();
-  render();
+  try {
+    await updateOrderStatus(order.id, "picked_up");
+    await updateOrder(order.id, { pickedUpAt: now });
+    selectedOrders.delete(order.id);
+    playFeedback();
+    await render();
+  } catch (error) {
+    console.error("受け渡し完了の更新に失敗しました", error);
+  }
 }
 
 function reannounce() {
@@ -160,8 +169,8 @@ fullscreenButton.addEventListener("click", toggleFullscreen);
 document.addEventListener("fullscreenchange", updateFullscreenLabel);
 
 listenStorage(() => {
-  render();
+  render().catch((error) => console.error(error));
 });
 
-render();
+render().catch((error) => console.error(error));
 updateFullscreenLabel();
