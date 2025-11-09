@@ -2,7 +2,10 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <title>キッチン進行 - 学園祭カフェ POS</title>
     <meta name="theme-color" content="#ffffff" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -20,22 +23,36 @@
         <h1>注文一覧</h1>
         <p class="screen-subtitle">キッチンモニター</p>
       </div>
+      <a href="index.html" class="home-link" data-testid="nav-home-button">メニュー</a>
       <div class="kds-controls">
         <input type="search" id="kds-search" data-testid="kds-search" placeholder="番号 / 名前で検索" aria-label="注文検索" />
         <select id="kds-category-filter" data-testid="kds-category-filter" aria-label="カテゴリフィルタ">
           <option value="all">すべて</option>
         </select>
-        <select id="kds-density" data-testid="kds-density" aria-label="表示密度">
-          <option value="medium">標準表示</option>
-          <option value="comfortable">ゆったり表示</option>
-          <option value="compact">一覧表示</option>
-        </select>
+        <label class="kds-count-input">
+          <span>表示数</span>
+          <input
+            type="number"
+            id="kds-visible-count"
+            data-testid="kds-visible-count"
+            aria-label="1ページあたりの表示数"
+            min="1"
+            max="32"
+            step="1"
+            value="8"
+          />
+        </label>
         <button id="kds-refresh" class="ghost" data-testid="kds-refresh" aria-label="最新状態を読み込む">更新</button>
       </div>
     </header>
     <main class="kds-main" aria-label="注文一覧">
-      <div id="kds-board" class="kds-board" data-testid="kds-board" data-density="medium">
+      <div id="kds-board" class="kds-board" data-testid="kds-board">
         <div class="kds-grid" id="kds-grid" data-testid="kds-grid"></div>
+        <div class="kds-pagination" id="kds-pagination" aria-live="polite">
+          <button id="kds-page-prev" class="ghost" data-testid="kds-page-prev" aria-label="前のページ">◀</button>
+          <span id="kds-page-indicator" data-testid="kds-page-indicator">1 / 1</span>
+          <button id="kds-page-next" class="ghost" data-testid="kds-page-next" aria-label="次のページ">▶</button>
+        </div>
       </div>
     </main>
     <template id="kds-card-template">

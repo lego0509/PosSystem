@@ -1,4 +1,5 @@
 let viewportInitialized = false;
+let gesturesLocked = false;
 
 function updateViewportUnits() {
   const height = window.innerHeight;
@@ -18,6 +19,43 @@ export function initializeViewportUnits() {
     window.removeEventListener("pageshow", updateViewportUnits);
     viewportInitialized = false;
   });
+}
+
+export function disableViewportGestures({ allowSelectors = [] } = {}) {
+  if (gesturesLocked) return;
+  gesturesLocked = true;
+
+  const allowList = Array.isArray(allowSelectors) ? allowSelectors.slice() : [];
+
+  const shouldAllowScroll = (target) => {
+    return allowList.some((selector) => target.closest(selector));
+  };
+
+  const preventTouchMove = (event) => {
+    if (shouldAllowScroll(event.target)) {
+      return;
+    }
+    event.preventDefault();
+  };
+
+  document.addEventListener("touchmove", preventTouchMove, { passive: false });
+
+  const preventGesture = (event) => {
+    event.preventDefault();
+  };
+
+  document.addEventListener("gesturestart", preventGesture);
+  document.addEventListener("gesturechange", preventGesture);
+  document.addEventListener("gestureend", preventGesture);
+  document.addEventListener(
+    "dblclick",
+    (event) => {
+      if (!shouldAllowScroll(event.target)) {
+        event.preventDefault();
+      }
+    },
+    { passive: false }
+  );
 }
 
 export function formatCurrency(value) {

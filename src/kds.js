@@ -24,10 +24,14 @@ initializeViewportUnits();
 
 const searchInput = document.getElementById("kds-search");
 const filterSelect = document.getElementById("kds-category-filter");
-const densitySelect = document.getElementById("kds-density");
 const refreshButton = document.getElementById("kds-refresh");
 const boardElement = document.getElementById("kds-board");
 const gridElement = document.getElementById("kds-grid");
+const visibleCountInput = document.getElementById("kds-visible-count");
+const paginationElement = document.getElementById("kds-pagination");
+const pagePrevButton = document.getElementById("kds-page-prev");
+const pageNextButton = document.getElementById("kds-page-next");
+const pageIndicator = document.getElementById("kds-page-indicator");
 const cardTemplate = document.getElementById("kds-card-template");
 const feedbackAudio = document.getElementById("kds-feedback");
 
@@ -38,6 +42,26 @@ const playFeedback = createAudioPlayer(feedbackAudio, FEEDBACK_SOUND);
 let currentOrders = [];
 let timerInterval = null;
 let productMap = new Map();
+let itemsPerPage = 8;
+let currentPage = 0;
+
+function clampVisibleCount(value) {
+  if (!Number.isFinite(value)) return itemsPerPage;
+  return Math.min(32, Math.max(1, Math.floor(value)));
+}
+
+function updateGridLayout(count) {
+  const target = Math.max(1, count);
+  const columns = Math.min(4, Math.max(1, Math.ceil(Math.sqrt(target))));
+  gridElement?.style.setProperty("--kds-columns", columns);
+}
+
+if (visibleCountInput) {
+  const initial = Number.parseInt(visibleCountInput.value, 10);
+  itemsPerPage = clampVisibleCount(Number.isNaN(initial) ? 8 : initial);
+  visibleCountInput.value = String(itemsPerPage);
+  updateGridLayout(itemsPerPage);
+}
 
 function refreshProductMap(products) {
   const source = products ?? getAllProducts();
@@ -178,8 +202,6 @@ function renderBoard() {
   if (!gridElement || !boardElement) return;
   const searchValue = searchInput.value.trim();
   const filter = filterSelect.value;
-  const density = densitySelect?.value || "medium";
-  boardElement.dataset.density = density;
 
   const filtered = currentOrders
     .filter((order) => {
@@ -189,26 +211,45 @@ function renderBoard() {
       const matchesFilter = filter === "all" ? true : order.items.some((item) => item.category === filter);
       return matchesSearch && matchesFilter;
     })
-    .sort((a, b) => {
-      const statusDiff = STATUS_FLOW.indexOf(a.status) - STATUS_FLOW.indexOf(b.status);
-      if (statusDiff !== 0) {
-        return statusDiff;
-      }
-      return a.createdAt - b.createdAt;
-    });
+    .sort((a, b) => a.createdAt - b.createdAt);
 
   gridElement.innerHTML = "";
-  boardElement.classList.toggle("empty", filtered.length === 0);
+  const totalOrders = filtered.length;
+  const hasOrders = totalOrders > 0;
+  boardElement.classList.toggle("empty", !hasOrders);
 
-  if (!filtered.length) {
+  const totalPages = hasOrders ? Math.ceil(totalOrders / itemsPerPage) : 1;
+  if (currentPage >= totalPages) {
+    currentPage = Math.max(0, totalPages - 1);
+  }
+
+  const startIndex = currentPage * itemsPerPage;
+  const pageItems = hasOrders ? filtered.slice(startIndex, startIndex + itemsPerPage) : [];
+
+  updateGridLayout(hasOrders ? Math.min(itemsPerPage, Math.max(pageItems.length, 1)) : 1);
+
+  if (!hasOrders) {
     const empty = document.createElement("div");
     empty.className = "kds-empty";
     empty.textContent = "現在表示する注文はありません";
     gridElement.appendChild(empty);
+    if (paginationElement && pageIndicator && pagePrevButton && pageNextButton) {
+      pageIndicator.textContent = "0 / 0";
+      pagePrevButton.disabled = true;
+      pageNextButton.disabled = true;
+      paginationElement.hidden = true;
+    }
     return;
   }
 
-  filtered.forEach((order) => {
+  if (paginationElement && pageIndicator && pagePrevButton && pageNextButton) {
+    paginationElement.hidden = false;
+    pageIndicator.textContent = `${currentPage + 1} / ${totalPages}`;
+    pagePrevButton.disabled = currentPage === 0;
+    pageNextButton.disabled = currentPage >= totalPages - 1;
+  }
+
+  pageItems.forEach((order) => {
     const card = renderOrderCard(order);
     gridElement.appendChild(card);
   });
@@ -266,11 +307,44 @@ async function refreshBoard() {
   renderBoard();
 }
 
-searchInput.addEventListener("input", renderBoard);
-filterSelect.addEventListener("change", renderBoard);
-densitySelect?.addEventListener("change", renderBoard);
+searchInput.addEventListener("input", () => {
+  currentPage = 0;
+  renderBoard();
+});
+
+filterSelect.addEventListener("change", () => {
+  currentPage = 0;
+  renderBoard();
+});
 refreshButton.addEventListener("click", () => {
   refreshBoard().catch((error) => console.error(error));
+});
+
+visibleCountInput?.addEventListener("change", () => {
+  const next = clampVisibleCount(Number.parseInt(visibleCountInput.value, 10));
+  itemsPerPage = next;
+  visibleCountInput.value = String(next);
+  currentPage = 0;
+  updateGridLayout(itemsPerPage);
+  renderBoard();
+});
+
+visibleCountInput?.addEventListener("blur", () => {
+  visibleCountInput.value = String(itemsPerPage);
+});
+
+pagePrevButton?.addEventListener("click", () => {
+  if (pagePrevButton.disabled) return;
+  if (currentPage > 0) {
+    currentPage -= 1;
+    renderBoard();
+  }
+});
+
+pageNextButton?.addEventListener("click", () => {
+  if (pageNextButton.disabled) return;
+  currentPage += 1;
+  renderBoard();
 });
 
 listenStorage(() => {

@@ -6,14 +6,15 @@ import {
   createAudioPlayer,
   FEEDBACK_SOUND,
   initializeViewportUnits,
+  disableViewportGestures,
 } from "./utils.js";
 
 initializeViewportUnits();
+disableViewportGestures({ allowSelectors: ["[data-scroll-region='true']"] });
 
 const categoryTabs = document.getElementById("category-tabs");
 const productGrid = document.getElementById("product-grid");
 const cartContainer = document.getElementById("cart-items");
-const customerNameInput = document.getElementById("customer-name");
 const productPrevButton = document.getElementById("product-prev");
 const productNextButton = document.getElementById("product-next");
 const productPageIndicator = document.getElementById("product-page-indicator");
@@ -589,7 +590,6 @@ async function handleConfirm() {
   confirmButton.disabled = true;
   confirmButton.setAttribute("aria-busy", "true");
   const now = Date.now();
-  const customerName = customerNameInput.value.trim();
   const orderItems = cartItems.map((item) => ({
     productId: item.productId,
     name: item.name,
@@ -604,7 +604,6 @@ async function handleConfirm() {
   const primaryCategory = orderItems[0]?.category ?? "pancake";
   try {
     const created = await addOrder({
-      customerName,
       items: orderItems,
       total,
       primaryCategory
@@ -613,7 +612,6 @@ async function handleConfirm() {
     orderNumberDisplay.textContent = created.number;
     orderNumberModal.hidden = false;
     resetCart();
-    customerNameInput.value = "";
     errorMessage.textContent = "";
   } catch (error) {
     console.error("注文の登録に失敗しました", error);
