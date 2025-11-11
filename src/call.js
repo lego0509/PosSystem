@@ -1,4 +1,4 @@
-import { getOrders, updateOrderStatus, updateOrder, listenStorage, markReadyAcknowledged } from "./storage.js";
+import { getOrders, listenStorage, markReadyAcknowledged } from "./storage.js";
 import { createAudioPlayer, FEEDBACK_SOUND, initializeViewportUnits } from "./utils.js";
 
 const readyGrid = document.getElementById("call-ready-grid");
@@ -26,7 +26,20 @@ async function loadOrders() {
 
 function renderReadyOrders(orders) {
   readyGrid.innerHTML = "";
-  const readyOrders = orders.filter((order) => order.status === "ready");
+  const readyOrders = orders
+    .filter((order) => order.status === "ready")
+    .sort((a, b) => {
+      const aReady = a.statusHistory?.find((entry) => entry.status === "ready")?.at || a.createdAt;
+      const bReady = b.statusHistory?.find((entry) => entry.status === "ready")?.at || b.createdAt;
+      return aReady - bReady;
+    })
+    .slice(0, 20);
+
+  const visibleIds = new Set(readyOrders.map((order) => order.id));
+  const columns = Math.min(5, Math.max(2, Math.ceil(Math.sqrt(Math.max(readyOrders.length, 1)))));
+  readyGrid.style.setProperty("--call-columns", String(columns));
+  readyGrid.classList.toggle("empty", readyOrders.length === 0);
+
   readyOrders.forEach((order) => {
     const card = document.createElement("div");
     card.className = "ready-card";
@@ -49,18 +62,6 @@ function renderReadyOrders(orders) {
       card.appendChild(name);
     }
 
-    const button = document.createElement("button");
-    button.className = "ghost";
-    button.type = "button";
-    button.textContent = "受け渡し完了";
-    button.setAttribute("aria-label", `注文 ${order.number} を受け渡し完了にする`);
-    button.setAttribute("data-testid", `call-ready-complete-${order.id}`);
-    button.addEventListener("click", (event) => {
-      event.stopPropagation();
-      markPickedUp(order).catch((error) => console.error(error));
-    });
-    card.appendChild(button);
-
     card.addEventListener("click", () => toggleSelect(order.id));
     card.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
@@ -81,7 +82,7 @@ function renderReadyOrders(orders) {
     }
   });
 
-  selectedOrders = new Set([...selectedOrders].filter((id) => readyOrders.some((order) => order.id === id)));
+  selectedOrders = new Set([...selectedOrders].filter((id) => visibleIds.has(id)));
 }
 
 function renderHistory(orders) {
@@ -125,19 +126,9 @@ function toggleSelect(orderId) {
   } else {
     selectedOrders.add(orderId);
   }
-  render().catch((error) => console.error(error));
-}
-
-async function markPickedUp(order) {
-  const now = Date.now();
-  try {
-    await updateOrderStatus(order.id, "picked_up");
-    await updateOrder(order.id, { pickedUpAt: now });
-    selectedOrders.delete(order.id);
-    playFeedback();
-    await render();
-  } catch (error) {
-    console.error("受け渡し完了の更新に失敗しました", error);
+  const card = readyGrid.querySelector(`[data-id="${orderId}"]`);
+  if (card) {
+    card.classList.toggle("selected");
   }
 }
 

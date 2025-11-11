@@ -28,6 +28,19 @@
   gap: 0.5rem;
 }
 
+.cart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 48px;
+}
+
+.cart-header h2 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  margin: 0;
+}
+
 .status-controls {
   display: flex;
   gap: 0.6rem;
@@ -131,10 +144,10 @@
   flex: 1;
   border: 1px solid rgba(17, 24, 39, 0.08);
   border-radius: 14px;
-  padding: 0.45rem;
+  padding: 0.6rem;
   background: rgba(37, 99, 235, 0.04);
-  display: grid;
-  grid-template-rows: repeat(3, minmax(0, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 0.55rem;
   min-height: 0;
   overflow-y: auto;

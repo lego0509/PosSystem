@@ -8,16 +8,16 @@ import {
   initializeViewportUnits,
 } from "./utils.js";
 
-const STATUS_FLOW = ["queued", "in_progress", "ready"];
+const STATUS_FLOW = ["queued", "ready", "picked_up"];
 const STATUS_LABELS = {
-  queued: "待ち",
-  in_progress: "調理中",
-  ready: "完成"
+  queued: "調理中",
+  ready: "完成待ち",
+  picked_up: "受け渡し済"
 };
 const ACTION_LABELS = {
-  queued: "調理開始",
-  in_progress: "完成",
-  ready: "完了済"
+  queued: "完成",
+  ready: "受け渡し完了",
+  picked_up: "完了済"
 };
 
 initializeViewportUnits();
@@ -42,7 +42,7 @@ const playFeedback = createAudioPlayer(feedbackAudio, FEEDBACK_SOUND);
 let currentOrders = [];
 let timerInterval = null;
 let productMap = new Map();
-let itemsPerPage = 8;
+let itemsPerPage = 4;
 let currentPage = 0;
 
 function clampVisibleCount(value) {
@@ -52,8 +52,19 @@ function clampVisibleCount(value) {
 
 function updateGridLayout(count) {
   const target = Math.max(1, count);
-  const columns = Math.min(4, Math.max(1, Math.ceil(Math.sqrt(target))));
+  let columns = 1;
+  if (target <= 2) {
+    columns = 1;
+  } else if (target <= 4) {
+    columns = 2;
+  } else if (target <= 9) {
+    columns = 3;
+  } else {
+    columns = 4;
+  }
+  const rows = Math.max(1, Math.ceil(target / columns));
   gridElement?.style.setProperty("--kds-columns", columns);
+  gridElement?.style.setProperty("--kds-rows", rows);
 }
 
 if (visibleCountInput) {
@@ -162,7 +173,7 @@ function renderOrderCard(order) {
     itemsEl.appendChild(li);
   });
 
-  const advanceDisabled = STATUS_FLOW.indexOf(order.status) === STATUS_FLOW.length - 1;
+  const advanceDisabled = order.status === "picked_up";
   advanceBtn.textContent = ACTION_LABELS[order.status] || "次へ";
   advanceBtn.disabled = advanceDisabled;
   clone.classList.toggle("no-advance", advanceDisabled);
@@ -226,7 +237,7 @@ function renderBoard() {
   const startIndex = currentPage * itemsPerPage;
   const pageItems = hasOrders ? filtered.slice(startIndex, startIndex + itemsPerPage) : [];
 
-  updateGridLayout(hasOrders ? Math.min(itemsPerPage, Math.max(pageItems.length, 1)) : 1);
+  updateGridLayout(hasOrders ? Math.max(pageItems.length, 1) : 1);
 
   if (!hasOrders) {
     const empty = document.createElement("div");
@@ -257,7 +268,7 @@ function renderBoard() {
 
 async function advanceStatus(order) {
   const currentIndex = STATUS_FLOW.indexOf(order.status);
-  if (currentIndex === -1 || currentIndex === STATUS_FLOW.length - 1) {
+  if (currentIndex === -1 || order.status === "picked_up") {
     return;
   }
   const nextStatus = STATUS_FLOW[currentIndex + 1];

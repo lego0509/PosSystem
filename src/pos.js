@@ -18,9 +18,6 @@ const cartContainer = document.getElementById("cart-items");
 const productPrevButton = document.getElementById("product-prev");
 const productNextButton = document.getElementById("product-next");
 const productPageIndicator = document.getElementById("product-page-indicator");
-const cartPrevButton = document.getElementById("cart-prev");
-const cartNextButton = document.getElementById("cart-next");
-const cartPageIndicator = document.getElementById("cart-page-indicator");
 const undoButton = document.getElementById("undo-button");
 const clearButton = document.getElementById("clear-button");
 const totalDisplay = document.getElementById("cart-total");
@@ -45,7 +42,6 @@ sessionStorage.setItem("pos-preferred-route", "/pos");
 const playFeedback = createAudioPlayer(feedbackAudio, FEEDBACK_SOUND);
 
 const PRODUCTS_PER_PAGE = 6;
-const CART_ITEMS_PER_PAGE = 3;
 
 let currentCategory = CATEGORIES[0].id;
 let quickQuantity = 1;
@@ -55,7 +51,6 @@ let modalProduct = null;
 let modalSelections = {};
 let allProducts = [];
 let productPage = 0;
-let cartPage = 0;
 
 function setQuickQuantity(qty) {
   quickQuantity = Math.max(1, Math.min(9, qty));
@@ -120,23 +115,6 @@ function updateProductPager(totalProducts) {
   productNextButton.setAttribute("aria-disabled", String(disableNext));
 }
 
-function updateCartPager(totalItems) {
-  const totalPages = Math.max(1, Math.ceil(totalItems / CART_ITEMS_PER_PAGE));
-  cartPage = Math.min(cartPage, totalPages - 1);
-  cartPage = Math.max(0, cartPage);
-  if (totalItems === 0) {
-    cartPageIndicator.textContent = "0 / 0";
-  } else {
-    cartPageIndicator.textContent = `${cartPage + 1} / ${totalPages}`;
-  }
-  const disablePrev = cartPage <= 0 || totalItems === 0;
-  const disableNext = cartPage >= totalPages - 1 || totalItems === 0;
-  cartPrevButton.disabled = disablePrev;
-  cartNextButton.disabled = disableNext;
-  cartPrevButton.setAttribute("aria-disabled", String(disablePrev));
-  cartNextButton.setAttribute("aria-disabled", String(disableNext));
-}
-
 function renderProducts() {
   const products = getProductsByCategory(currentCategory);
   updateProductPager(products.length);
@@ -196,29 +174,12 @@ function setProductPage(nextPage) {
   }
 }
 
-function setCartPage(nextPage) {
-  const totalPages = Math.max(1, Math.ceil(cartItems.length / CART_ITEMS_PER_PAGE));
-  const newPage = Math.min(Math.max(nextPage, 0), Math.max(totalPages - 1, 0));
-  if (newPage !== cartPage) {
-    cartPage = newPage;
-    renderCart();
-  }
-}
-
 productPrevButton.addEventListener("click", () => {
   setProductPage(productPage - 1);
 });
 
 productNextButton.addEventListener("click", () => {
   setProductPage(productPage + 1);
-});
-
-cartPrevButton.addEventListener("click", () => {
-  setCartPage(cartPage - 1);
-});
-
-cartNextButton.addEventListener("click", () => {
-  setCartPage(cartPage + 1);
 });
 
 function switchCategory(categoryId) {
@@ -282,7 +243,6 @@ function addCartItem(product, selections, quantity) {
       optionSummary: summary,
       note: ""
     });
-    cartPage = Math.max(0, Math.ceil(cartItems.length / CART_ITEMS_PER_PAGE) - 1);
   }
   playFeedback();
   renderCart();
@@ -291,7 +251,6 @@ function addCartItem(product, selections, quantity) {
 function renderCart() {
   cartContainer.innerHTML = "";
   const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  updateCartPager(cartItems.length);
   cartContainer.classList.toggle("empty", cartItems.length === 0);
 
   if (!cartItems.length) {
@@ -303,10 +262,7 @@ function renderCart() {
     return;
   }
 
-  const start = cartPage * CART_ITEMS_PER_PAGE;
-  const visible = cartItems.slice(start, start + CART_ITEMS_PER_PAGE);
-  visible.forEach((item, visibleIndex) => {
-    const index = start + visibleIndex;
+  cartItems.forEach((item, index) => {
     const row = document.createElement("div");
     row.className = "cart-item";
     row.setAttribute("data-testid", `pos-cart-item-${index}`);
@@ -384,12 +340,6 @@ function renderCart() {
     cartContainer.appendChild(row);
   });
 
-  for (let index = visible.length; index < CART_ITEMS_PER_PAGE; index += 1) {
-    const filler = document.createElement("div");
-    filler.className = "grid-filler";
-    cartContainer.appendChild(filler);
-  }
-
   totalDisplay.textContent = formatCurrency(total);
   confirmButton.disabled = shouldDisableConfirm();
 }
@@ -400,7 +350,6 @@ function updateItemQuantity(index, quantity) {
   pushHistory();
   if (quantity <= 0) {
     cartItems.splice(index, 1);
-    cartPage = Math.min(cartPage, Math.max(0, Math.ceil(cartItems.length / CART_ITEMS_PER_PAGE) - 1));
   } else {
     item.quantity = quantity;
   }
@@ -410,7 +359,6 @@ function updateItemQuantity(index, quantity) {
 function removeItem(index) {
   pushHistory();
   cartItems.splice(index, 1);
-  cartPage = Math.min(cartPage, Math.max(0, Math.ceil(cartItems.length / CART_ITEMS_PER_PAGE) - 1));
   renderCart();
 }
 
@@ -581,7 +529,6 @@ function shouldDisableConfirm() {
 function resetCart() {
   cartItems = [];
   historyStack = [];
-  cartPage = 0;
   renderCart();
 }
 
@@ -636,7 +583,6 @@ clearButton.addEventListener("click", () => {
   }
   cartItems = [];
   historyStack = [];
-  cartPage = 0;
   renderCart();
 });
 
@@ -711,14 +657,8 @@ function handleKeyShortcuts(event) {
         setProductPage(productPage + 1);
         return;
       }
-      if (event.key === "ArrowUp") {
+      if (event.key === "ArrowUp" || event.key === "ArrowDown") {
         event.preventDefault();
-        setCartPage(cartPage - 1);
-        return;
-      }
-      if (event.key === "ArrowDown") {
-        event.preventDefault();
-        setCartPage(cartPage + 1);
         return;
       }
     }
