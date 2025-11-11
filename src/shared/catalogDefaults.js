@@ -3,7 +3,7 @@ export const CATEGORIES = [
   { id: "crepe", name: "クレープ", shortcut: "F2" },
   { id: "sausage", name: "ソーセージ", shortcut: "F3" },
   { id: "drink", name: "ドリンク", shortcut: "F4" },
-  { id: "popular", name: "よく出るセット", shortcut: "F5" }
+  //{ id: "popular", name: "よく出るセット", shortcut: "F5" }
 ];
 
 const pancakeOptions = [
@@ -85,6 +85,45 @@ const sausageOptions = [
   }
 ];
 
+const pancakeSimpleOptions = [
+  {
+    id: "syrup",
+    label: "シロップ",
+    type: "choice",
+    options: [
+      { value: "choco", label: "チョコ", short: "チョコ" },
+      { value: "cream", label: "クリーム", short: "クリーム" }
+    ],
+    default: "choco"
+  }
+];
+
+const crepeSimpleOptions = [
+  {
+    id: "syrup",
+    label: "シロップ",
+    type: "choice",
+    options: [
+      { value: "choco", label: "チョコ", short: "チョコ" },
+      { value: "cream", label: "クリーム", short: "クリーム" }
+    ],
+    default: "choco"
+  }
+];
+
+const crepeSavoryOptions = [
+  {
+    id: "sauce",
+    label: "ソース",
+    type: "choice",
+    options: [
+      { value: "mayo", label: "マヨネーズ", short: "マヨ" },
+      { value: "ketchup", label: "ケチャップ", short: "ケチャ" }
+    ],
+    default: "mayo"
+  }
+];
+
 export const OPTION_TEMPLATES = [
   {
     id: "none",
@@ -109,171 +148,136 @@ export const OPTION_TEMPLATES = [
     label: "ソーセージ標準",
     description: "ケチャップとマスタードの有無",
     options: sausageOptions
+  },
+  {
+    id: "pancake-simple",
+    label: "パンケーキ（シンプル）",
+    description: "チョコ or クリームシロップを選択",
+    options: pancakeSimpleOptions
+  },
+  {
+    id: "crepe-simple",
+    label: "クレープ（シンプル）",
+    description: "チョコ or クリームシロップを選択",
+    options: crepeSimpleOptions
+  },
+  {
+    id: "crepe-savory-simple",
+    label: "クレープ（おかず系）",
+    description: "マヨネーズ or ケチャップを選択",
+    options: crepeSavoryOptions
   }
 ];
 
 export const DEFAULT_PRODUCTS = [
   {
-    id: "pancake-classic",
+    id: "pancake-orange",
     category: "pancake",
-    name: "クラシック",
-    price: 350,
-    image: "https://placehold.co/400x300?text=Classic",
-    optionTemplate: "pancake-standard"
+    name: "オレンジ",
+    price: 0,
+    image: "https://placehold.co/400x300?text=Orange",
+    optionTemplate: "pancake-simple",
+    description: "",
+    imageName: ""
   },
   {
-    id: "pancake-choco",
+    id: "pancake-blueberry",
     category: "pancake",
-    name: "チョコソース",
-    price: 400,
-    image: "https://placehold.co/400x300?text=Choco",
-    optionTemplate: "pancake-standard"
+    name: "ブルーベリー",
+    price: 0,
+    image: "https://placehold.co/400x300?text=Blueberry",
+    optionTemplate: "pancake-simple",
+    description: "",
+    imageName: ""
   },
   {
     id: "pancake-strawberry",
     category: "pancake",
-    name: "いちご＆ホイップ",
-    price: 450,
+    name: "いちご",
+    price: 0,
     image: "https://placehold.co/400x300?text=Strawberry",
-    optionTemplate: "pancake-standard"
+    optionTemplate: "pancake-simple",
+    description: "",
+    imageName: ""
   },
   {
-    id: "pancake-maple",
-    category: "pancake",
-    name: "メープルバター",
-    price: 420,
-    image: "https://placehold.co/400x300?text=Maple",
-    optionTemplate: "pancake-standard"
-  },
-  {
-    id: "pancake-banana",
-    category: "pancake",
-    name: "バナナチョコ",
-    price: 430,
-    image: "https://placehold.co/400x300?text=Banana",
-    optionTemplate: "pancake-standard"
-  },
-  {
-    id: "pancake-berry",
-    category: "pancake",
-    name: "ベリーミックス",
-    price: 480,
-    image: "https://placehold.co/400x300?text=Berry",
-    optionTemplate: "pancake-standard"
-  },
-  {
-    id: "crepe-sugar",
+    id: "crepe-strawberry",
     category: "crepe",
-    name: "シュガーバター",
-    price: 300,
-    image: "https://placehold.co/400x300?text=Sugar",
-    optionTemplate: "crepe-standard"
+    name: "いちご",
+    price: 0,
+    image: "https://placehold.co/400x300?text=Strawberry",
+    optionTemplate: "crepe-simple",
+    description: "",
+    imageName: ""
   },
   {
-    id: "crepe-custard",
+    id: "crepe-orange",
     category: "crepe",
-    name: "カスタード＆いちご",
-    price: 450,
-    image: "https://placehold.co/400x300?text=Custard",
-    optionTemplate: "crepe-standard"
+    name: "オレンジ",
+    price: 0,
+    image: "https://placehold.co/400x300?text=Orange",
+    optionTemplate: "crepe-simple",
+    description: "",
+    imageName: ""
   },
   {
-    id: "crepe-choco",
+    id: "crepe-blueberry",
     category: "crepe",
-    name: "チョコバナナ",
-    price: 420,
-    image: "https://placehold.co/400x300?text=ChocoBanana",
-    optionTemplate: "crepe-standard"
+    name: "ブルーベリー",
+    price: 0,
+    image: "https://placehold.co/400x300?text=Blueberry",
+    optionTemplate: "crepe-simple",
+    description: "",
+    imageName: ""
   },
   {
-    id: "crepe-tuna",
+    id: "crepe-savory",
     category: "crepe",
-    name: "ツナマヨ",
-    price: 430,
-    image: "https://placehold.co/400x300?text=Tuna",
-    optionTemplate: "crepe-standard"
-  },
-  {
-    id: "crepe-ham",
-    category: "crepe",
-    name: "ハムチーズ",
-    price: 440,
-    image: "https://placehold.co/400x300?text=Ham",
-    optionTemplate: "crepe-standard"
-  },
-  {
-    id: "crepe-matcha",
-    category: "crepe",
-    name: "抹茶クリーム",
-    price: 460,
-    image: "https://placehold.co/400x300?text=Matcha",
-    optionTemplate: "crepe-standard"
+    name: "おかず",
+    price: 0,
+    image: "https://placehold.co/400x300?text=Savory",
+    optionTemplate: "crepe-savory-simple",
+    description: "",
+    imageName: ""
   },
   {
     id: "sausage-large",
     category: "sausage",
-    name: "ソーセージ（大）",
-    price: 350,
+    name: "ソーセージ",
+    price: 0,
     image: "https://placehold.co/400x300?text=Sausage",
-    optionTemplate: "sausage-standard"
+    optionTemplate: "none",
+    description: "",
+    imageName: ""
   },
   {
-    id: "drink-ice-coffee",
+    id: "drink-coffee",
     category: "drink",
-    name: "アイスコーヒー",
-    price: 200,
-    image: "https://placehold.co/400x300?text=Iced+Coffee",
-    optionTemplate: "none"
-  },
-  {
-    id: "drink-orange",
-    category: "drink",
-    name: "オレンジジュース",
-    price: 200,
-    image: "https://placehold.co/400x300?text=Orange",
-    optionTemplate: "none"
+    name: "コーヒー",
+    price: 0,
+    image: "https://placehold.co/400x300?text=Coffee",
+    optionTemplate: "none",
+    description: "",
+    imageName: ""
   },
   {
     id: "drink-ice-tea",
     category: "drink",
     name: "アイスティー",
-    price: 200,
+    price: 0,
     image: "https://placehold.co/400x300?text=Iced+Tea",
-    optionTemplate: "none"
+    optionTemplate: "none",
+    description: "",
+    imageName: ""
   },
   {
-    id: "drink-oolong",
+    id: "drink-milk-tea",
     category: "drink",
-    name: "ウーロン茶",
-    price: 200,
-    image: "https://placehold.co/400x300?text=Oolong",
-    optionTemplate: "none"
-  },
-  {
-    id: "set-pancake-drink",
-    category: "popular",
-    name: "クラシック＋ドリンクセット",
-    price: 520,
-    image: "https://placehold.co/400x300?text=Set+A",
-    description: "クラシックパンケーキ＋お好きなドリンク",
-    optionTemplate: "none"
-  },
-  {
-    id: "set-berry-coffee",
-    category: "popular",
-    name: "ベリー＋アイスコーヒー",
-    price: 650,
-    image: "https://placehold.co/400x300?text=Set+B",
-    description: "ベリーミックスとアイスコーヒーのお得セット",
-    optionTemplate: "none"
-  },
-  {
-    id: "set-crepe-drink",
-    category: "popular",
-    name: "クレープ＋ドリンクセット",
-    price: 580,
-    image: "https://placehold.co/400x300?text=Set+C",
-    description: "クレープ＋ドリンクの定番コンビ",
-    optionTemplate: "none"
+    name: "ミルクティー",
+    price: 0,
+    image: "https://placehold.co/400x300?text=Milk+Tea",
+    optionTemplate: "none",
+    description: "",
+    imageName: ""
   }
 ];
