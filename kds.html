@@ -54,6 +54,19 @@
           <button id="kds-page-next" class="ghost" data-testid="kds-page-next" aria-label="次のページ">▶</button>
         </div>
       </div>
+      <section class="kds-history-panel" aria-label="最近の受け渡し済み">
+        <header class="kds-history-header">
+          <h2>最近の受け渡し済み</h2>
+          <p>最大10件まで保持します</p>
+        </header>
+        <div
+          class="kds-history-list"
+          id="kds-history-list"
+          data-testid="kds-history-list"
+          role="list"
+          aria-live="polite"
+        ></div>
+      </section>
     </main>
     <template id="kds-card-template">
       <article class="kds-card" tabindex="0">

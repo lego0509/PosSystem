@@ -27,6 +27,7 @@ const filterSelect = document.getElementById("kds-category-filter");
 const refreshButton = document.getElementById("kds-refresh");
 const boardElement = document.getElementById("kds-board");
 const gridElement = document.getElementById("kds-grid");
+const historyList = document.getElementById("kds-history-list");
 const visibleCountInput = document.getElementById("kds-visible-count");
 const paginationElement = document.getElementById("kds-pagination");
 const pagePrevButton = document.getElementById("kds-page-prev");
@@ -35,11 +36,14 @@ const pageIndicator = document.getElementById("kds-page-indicator");
 const cardTemplate = document.getElementById("kds-card-template");
 const feedbackAudio = document.getElementById("kds-feedback");
 
+const MAX_HISTORY = 10;
+
 sessionStorage.setItem("pos-preferred-route", "/kds");
 
 const playFeedback = createAudioPlayer(feedbackAudio, FEEDBACK_SOUND);
 
 let currentOrders = [];
+let recentHistory = [];
 let timerInterval = null;
 let productMap = new Map();
 let itemsPerPage = 4;
@@ -88,13 +92,26 @@ function buildFilterOptions() {
   });
 }
 
+function getPickedTimestamp(order) {
+  if (!order) return 0;
+  if (order.pickedUpAt) return order.pickedUpAt;
+  const history = Array.isArray(order.statusHistory) ? order.statusHistory.slice().reverse() : [];
+  const picked = history.find((entry) => entry.status === "picked_up");
+  return picked?.at || order.updatedAt || order.createdAt || 0;
+}
+
 async function loadOrders() {
   try {
     const orders = await getOrders();
     currentOrders = orders.filter((order) => order.status !== "picked_up");
+    recentHistory = orders
+      .filter((order) => order.status === "picked_up")
+      .sort((a, b) => getPickedTimestamp(b) - getPickedTimestamp(a))
+      .slice(0, MAX_HISTORY);
   } catch (error) {
     console.error("注文情報の取得に失敗しました", error);
     currentOrders = [];
+    recentHistory = [];
   }
 }
 
@@ -209,6 +226,56 @@ function renderOrderCard(order) {
   return clone;
 }
 
+function renderHistory() {
+  if (!historyList) return;
+  historyList.innerHTML = "";
+
+  if (!recentHistory.length) {
+    return;
+  }
+
+  recentHistory.forEach((order) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "kds-history-item";
+    button.dataset.id = order.id;
+    button.setAttribute("data-testid", `kds-history-${order.id}`);
+    button.setAttribute("aria-label", `注文 ${order.number} を戻す`);
+
+    const number = document.createElement("span");
+    number.className = "kds-history-item-number";
+    number.textContent = `#${order.number}`;
+    button.appendChild(number);
+
+    const timestamp = getPickedTimestamp(order);
+    const metaLine = document.createElement("span");
+    metaLine.className = "kds-history-item-meta";
+    if (timestamp) {
+      metaLine.textContent = `${new Date(timestamp).toLocaleTimeString("ja-JP", {
+        hour: "2-digit",
+        minute: "2-digit"
+      })}${order.customerName ? ` ／ ${order.customerName}` : ""}`;
+    } else if (order.customerName) {
+      metaLine.textContent = order.customerName;
+    } else {
+      metaLine.textContent = "";
+    }
+    button.appendChild(metaLine);
+
+    const hint = document.createElement("span");
+    hint.className = "kds-history-item-meta";
+    hint.textContent = "タップで戻す";
+    button.appendChild(hint);
+
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      revertStatus(order).catch((error) => console.error(error));
+    });
+
+    historyList.appendChild(button);
+  });
+}
+
 function renderBoard() {
   if (!gridElement || !boardElement) return;
   const searchValue = searchInput.value.trim();
@@ -250,6 +317,7 @@ function renderBoard() {
       pageNextButton.disabled = true;
       paginationElement.hidden = true;
     }
+    renderHistory();
     return;
   }
 
@@ -264,6 +332,8 @@ function renderBoard() {
     const card = renderOrderCard(order);
     gridElement.appendChild(card);
   });
+
+  renderHistory();
 }
 
 async function advanceStatus(order) {
@@ -286,6 +356,7 @@ async function revertStatus(order) {
   if (!order.statusHistory || order.statusHistory.length < 2) return;
   const history = order.statusHistory.slice(0, -1);
   const previous = history[history.length - 1];
+  if (!previous) return;
   try {
     await updateOrder(order.id, {
       status: previous.status,
