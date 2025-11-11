@@ -173,7 +173,7 @@ export const DEFAULT_PRODUCTS = [
   {
     id: "pancake-orange",
     category: "pancake",
-    name: "オレンジ",
+    name: "オレンジ（パンケーキ）",
     price: 0,
     image: "https://placehold.co/400x300?text=Orange",
     optionTemplate: "pancake-simple",
@@ -183,7 +183,7 @@ export const DEFAULT_PRODUCTS = [
   {
     id: "pancake-blueberry",
     category: "pancake",
-    name: "ブルーベリー",
+    name: "ブルーベリー（パンケーキ）",
     price: 0,
     image: "https://placehold.co/400x300?text=Blueberry",
     optionTemplate: "pancake-simple",
@@ -193,7 +193,7 @@ export const DEFAULT_PRODUCTS = [
   {
     id: "pancake-strawberry",
     category: "pancake",
-    name: "いちご",
+    name: "いちご（パンケーキ）",
     price: 0,
     image: "https://placehold.co/400x300?text=Strawberry",
     optionTemplate: "pancake-simple",
@@ -203,7 +203,7 @@ export const DEFAULT_PRODUCTS = [
   {
     id: "crepe-strawberry",
     category: "crepe",
-    name: "いちご",
+    name: "いちご（クレープ）",
     price: 0,
     image: "https://placehold.co/400x300?text=Strawberry",
     optionTemplate: "crepe-simple",
@@ -213,7 +213,7 @@ export const DEFAULT_PRODUCTS = [
   {
     id: "crepe-orange",
     category: "crepe",
-    name: "オレンジ",
+    name: "オレンジ（クレープ）",
     price: 0,
     image: "https://placehold.co/400x300?text=Orange",
     optionTemplate: "crepe-simple",
@@ -223,7 +223,7 @@ export const DEFAULT_PRODUCTS = [
   {
     id: "crepe-blueberry",
     category: "crepe",
-    name: "ブルーベリー",
+    name: "ブルーベリー（クレープ）",
     price: 0,
     image: "https://placehold.co/400x300?text=Blueberry",
     optionTemplate: "crepe-simple",
@@ -233,7 +233,7 @@ export const DEFAULT_PRODUCTS = [
   {
     id: "crepe-savory",
     category: "crepe",
-    name: "おかず",
+    name: "おかず（クレープ）",
     price: 0,
     image: "https://placehold.co/400x300?text=Savory",
     optionTemplate: "crepe-savory-simple",
@@ -281,3 +281,4 @@ export const DEFAULT_PRODUCTS = [
     imageName: ""
   }
 ];
+
