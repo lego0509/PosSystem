@@ -92,7 +92,7 @@ const pancakeSimpleOptions = [
     type: "choice",
     options: [
       { value: "choco", label: "チョコ", short: "チョコ" },
-      { value: "cream", label: "クリーム", short: "クリーム" }
+      { value: "maple", label: "メープル", short: "メープル" }
     ],
     default: "choco"
   }
@@ -105,7 +105,7 @@ const crepeSimpleOptions = [
     type: "choice",
     options: [
       { value: "choco", label: "チョコ", short: "チョコ" },
-      { value: "cream", label: "クリーム", short: "クリーム" }
+      { value: "maple", label: "メープル", short: "メープル" }
     ],
     default: "choco"
   }
