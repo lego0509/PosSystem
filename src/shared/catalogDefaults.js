@@ -92,7 +92,8 @@ const pancakeSimpleOptions = [
     type: "choice",
     options: [
       { value: "choco", label: "チョコ", short: "チョコ" },
-      { value: "maple", label: "メープル", short: "メープル" }
+      { value: "maple", label: "メープル", short: "メープル" },
+      { value: "none", label: "なし", short: "なし" }
     ],
     default: "choco"
   }
@@ -105,7 +106,8 @@ const crepeSimpleOptions = [
     type: "choice",
     options: [
       { value: "choco", label: "チョコ", short: "チョコ" },
-      { value: "maple", label: "メープル", short: "メープル" }
+      { value: "maple", label: "メープル", short: "メープル" },
+      { value: "none", label: "なし", short: "なし" }
     ],
     default: "choco"
   }
@@ -118,11 +120,13 @@ const crepeSavoryOptions = [
     type: "choice",
     options: [
       { value: "mayo", label: "マヨネーズ", short: "マヨ" },
-      { value: "ketchup", label: "ケチャップ", short: "ケチャ" }
+      { value: "ketchup", label: "ケチャップ", short: "ケチャ" },
+      { value: "none", label: "なし", short: "なし" }
     ],
     default: "mayo"
   }
 ];
+
 
 export const OPTION_TEMPLATES = [
   {
