@@ -33,12 +33,10 @@ function renderReadyOrders(orders) {
       const bReady = b.statusHistory?.find((entry) => entry.status === "ready")?.at || b.createdAt;
       return aReady - bReady;
     })
-    .slice(0, 9);
+    .slice(0, 12);
 
   const visibleIds = new Set(readyOrders.map((order) => order.id));
-  const columnTarget = readyOrders.length <= 1 ? 1 : readyOrders.length === 2 ? 2 : 3;
-  const columns = Math.max(1, Math.min(3, columnTarget));
-  readyGrid.style.setProperty("--call-columns", String(columns));
+  readyGrid.style.setProperty("--call-columns", "4");
   readyGrid.classList.toggle("empty", readyOrders.length === 0);
 
   readyOrders.forEach((order) => {

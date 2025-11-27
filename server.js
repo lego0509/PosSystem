@@ -89,6 +89,15 @@ function sanitizeStatusHistory(history) {
     .sort((a, b) => a.at - b.at);
 }
 
+function formatOrderNumber(input) {
+  if (Number.isFinite(Number(input))) {
+    const value = Number(input) % 1000;
+    return value.toString().padStart(3, "0");
+  }
+  const safe = String(input || "0");
+  return safe.slice(-3).padStart(3, "0");
+}
+
 function sanitizeOrder(order) {
   if (!order) return null;
   const items = Array.isArray(order.items) ? order.items.map((item) => sanitizeItem(item)) : [];
@@ -101,7 +110,7 @@ function sanitizeOrder(order) {
     : items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
   return {
     id: String(order.id || order.number || Date.now().toString()),
-    number: String(order.number || order.id || "0000").padStart(4, "0"),
+    number: formatOrderNumber(order.number || order.id || "000"),
     status,
     createdAt,
     updatedAt,
@@ -127,7 +136,7 @@ function sanitizeStore(data) {
   return {
     pause: Boolean(data?.pause),
     currentOrderNumber: Number.isFinite(Number(data?.currentOrderNumber))
-      ? Number(data.currentOrderNumber) % 9999
+      ? Number(data.currentOrderNumber) % 999
       : 0,
     catalog,
     orders: Array.isArray(data?.orders)
@@ -242,8 +251,8 @@ app.get("/api/orders", async (req, res) => {
 app.post("/api/orders", async (req, res) => {
   const data = await loadStore();
   const payload = sanitizeIncomingOrder(req.body || {});
-  data.currentOrderNumber = (data.currentOrderNumber % 9999) + 1;
-  const number = data.currentOrderNumber.toString().padStart(4, "0");
+  data.currentOrderNumber = (data.currentOrderNumber % 999) + 1;
+  const number = formatOrderNumber(data.currentOrderNumber);
   const order = {
     id: number,
     number,

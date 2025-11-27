@@ -1,4 +1,8 @@
 .call-screen {
+  --call-card-width: 260px;
+  --call-card-height: 210px;
+  --call-card-gap: 1rem;
+  --call-columns: 4;
   background: radial-gradient(circle at top, #152038 0%, #050914 60%, #01030a 100%);
   color: #f8fafc;
 }
@@ -75,10 +79,12 @@
 
 .ready-grid {
   display: grid;
-  grid-template-columns: repeat(var(--call-columns, 3), minmax(0, 1fr));
-  gap: 1.2rem;
+  grid-template-columns: repeat(var(--call-columns, 4), var(--call-card-width));
+  grid-auto-rows: var(--call-card-height);
+  gap: var(--call-card-gap);
   flex: 1;
-  align-content: center;
+  align-content: start;
+  justify-content: center;
   justify-items: center;
   min-height: 0;
 }
@@ -94,8 +100,8 @@
 }
 
 .ready-card {
-  width: 100%;
-  aspect-ratio: 1 / 1;
+  width: var(--call-card-width);
+  height: var(--call-card-height);
   border-radius: 26px;
   background: rgba(15, 23, 42, 0.65);
   color: #f8fafc;
@@ -124,9 +130,11 @@
 }
 
 .ready-number {
-  font-size: clamp(4.5rem, 12vw, 8.5rem);
+  font-size: clamp(3.4rem, 5vw, 5rem);
   font-weight: 800;
-  letter-spacing: 0.28em;
+  letter-spacing: 0.22em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05;
   text-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
 }
 
