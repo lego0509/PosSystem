@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>商品管理 - 学園祭カフェ POS</title>
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="icon" type="image/svg+xml" href="icons/icon-192.svg" />
+    <link rel="apple-touch-icon" href="icons/icon-512.svg" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="stylesheet" href="src/styles/common.css" />
+    <link rel="stylesheet" href="src/styles/catalog.css" />
+  </head>
+  <body class="screen catalog-screen">
+    <header class="screen-header">
+      <div>
+        <h1>商品管理</h1>
+        <p class="screen-subtitle">POS に表示する商品を追加・編集できます</p>
+      </div>
+      <a href="index.html" class="home-link" data-testid="nav-home-button">メニュー</a>
+      <div class="catalog-header-actions">
+        <button id="catalog-reset" class="ghost" data-testid="catalog-reset-button" aria-label="初期商品に戻す">
+          初期データに戻す
+        </button>
+        <button id="catalog-add" class="primary" data-testid="catalog-add-button" aria-label="新しい商品を追加">
+          新規商品
+        </button>
+      </div>
+    </header>
+    <main class="catalog-main">
+      <section class="catalog-list" aria-label="商品一覧">
+        <div class="catalog-list-header">
+          <div class="catalog-controls">
+            <label>
+              カテゴリ
+              <select id="catalog-filter" data-testid="catalog-filter">
+                <option value="all">すべて</option>
+              </select>
+            </label>
+            <label>
+              検索
+              <input
+                id="catalog-search"
+                type="search"
+                placeholder="商品名・IDで検索"
+                data-testid="catalog-search"
+              />
+            </label>
+          </div>
+        </div>
+        <div id="catalog-items" class="catalog-items" data-testid="catalog-items"></div>
+      </section>
+      <section class="catalog-editor" aria-label="商品編集">
+        <h2 id="catalog-editor-title">商品を選択してください</h2>
+        <form id="catalog-form" data-testid="catalog-form">
+          <input type="hidden" id="catalog-mode" value="new" />
+          <div class="form-row">
+            <label for="product-id">商品ID</label>
+            <input
+              id="product-id"
+              name="id"
+              required
+              minlength="1"
+              data-testid="catalog-field-id"
+              placeholder="例：pancake-new"
+            />
+          </div>
+          <div class="form-row">
+            <label for="product-name">商品名</label>
+            <input
+              id="product-name"
+              name="name"
+              required
+              data-testid="catalog-field-name"
+              placeholder="商品名"
+            />
+          </div>
+          <div class="form-row">
+            <label for="product-category">カテゴリ</label>
+            <select id="product-category" name="category" data-testid="catalog-field-category"></select>
+          </div>
+          <div class="form-row">
+            <label for="product-price">価格 (税込)</label>
+            <input
+              id="product-price"
+              name="price"
+              type="number"
+              min="0"
+              step="10"
+              required
+              data-testid="catalog-field-price"
+            />
+          </div>
+          <div class="form-row">
+            <label for="product-image-file">画像ファイル</label>
+            <div class="file-input-group">
+              <input
+                id="product-image-file"
+                name="imageFile"
+                type="file"
+                accept="image/*"
+                data-testid="catalog-field-image-file"
+              />
+              <button
+                id="product-image-file-clear"
+                type="button"
+                class="ghost"
+                data-testid="catalog-field-image-file-clear"
+              >
+                クリア
+              </button>
+            </div>
+            <p id="product-image-file-status" class="form-hint" aria-live="polite">ファイル未選択</p>
+            <p class="form-hint">PCからアップロードした画像がある場合はこちらが優先されます。</p>
+          </div>
+          <div class="form-row">
+            <label for="product-image">画像URL</label>
+            <input
+              id="product-image"
+              name="image"
+              type="url"
+              placeholder="https://..."
+              data-testid="catalog-field-image"
+            />
+            <p class="form-hint">外部URLを直接指定することもできます。</p>
+          </div>
+          <div class="form-row">
+            <label for="product-template">無料オプションセット</label>
+            <select id="product-template" name="optionTemplate" data-testid="catalog-field-template"></select>
+          </div>
+          <div class="form-row">
+            <label for="product-description">説明 (任意)</label>
+            <textarea
+              id="product-description"
+              name="description"
+              rows="3"
+              data-testid="catalog-field-description"
+              placeholder="商品説明や提供メモ"
+            ></textarea>
+          </div>
+          <div class="form-preview" aria-live="polite">
+            <span>プレビュー</span>
+            <div class="preview-card">
+              <img id="product-preview-image" src="https://placehold.co/200x150?text=Preview" alt="商品画像プレビュー" />
+              <div>
+                <strong id="product-preview-name">商品名</strong>
+                <span id="product-preview-price">¥0</span>
+              </div>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button id="catalog-delete" type="button" class="ghost" data-testid="catalog-delete-button" disabled>
+              削除
+            </button>
+            <button id="catalog-duplicate" type="button" class="ghost" data-testid="catalog-duplicate-button" disabled>
+              複製
+            </button>
+            <button id="catalog-save" type="submit" class="primary" data-testid="catalog-save-button">保存</button>
+          </div>
+          <p id="catalog-feedback" class="catalog-feedback" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+    </main>
+    <audio id="catalog-feedback-audio" preload="auto"></audio>
+    <script type="module" src="src/catalog.js"></script>
+    <script type="module" src="src/register-sw.js"></script>
+  </body>
+</html>
