@@ -49,7 +49,8 @@ function sanitizeProduct(product) {
     image: product.image || "https://placehold.co/400x300?text=No+Image",
     optionTemplate,
     description: product.description || "",
-    imageName: product.imageName ? String(product.imageName) : ""
+    imageName: product.imageName ? String(product.imageName) : "",
+    soldOut: Boolean(product.soldOut)
   };
 }
 

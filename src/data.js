@@ -53,7 +53,8 @@ function sanitizeProduct(product) {
     image,
     optionTemplate,
     description: product.description || "",
-    imageName: product.imageName ? String(product.imageName) : ""
+    imageName: product.imageName ? String(product.imageName) : "",
+    soldOut: Boolean(product.soldOut)
   };
 }
 

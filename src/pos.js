@@ -137,6 +137,12 @@ function renderProducts() {
     button.setAttribute("data-testid", `pos-product-${product.id}`);
     button.addEventListener("click", () => handleProductSelect(product));
 
+    if (product.soldOut) {
+      card.classList.add("sold-out");
+      button.disabled = true;
+      button.setAttribute("aria-disabled", "true");
+    }
+
     const img = document.createElement("img");
     img.src = product.image;
     img.alt = product.name;
@@ -153,6 +159,12 @@ function renderProducts() {
     info.appendChild(price);
     button.appendChild(img);
     button.appendChild(info);
+    if (product.soldOut) {
+      const soldOutTag = document.createElement("span");
+      soldOutTag.className = "product-soldout";
+      soldOutTag.textContent = "SOLD OUT";
+      button.appendChild(soldOutTag);
+    }
     card.appendChild(button);
     productGrid.appendChild(card);
   });
@@ -363,6 +375,7 @@ function removeItem(index) {
 }
 
 function handleProductSelect(product) {
+  if (product.soldOut) return;
   const defaultSelections = {};
   product.options?.forEach((option) => {
     if (option.type === "toggle") {

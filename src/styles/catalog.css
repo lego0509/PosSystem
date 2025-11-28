@@ -58,6 +58,7 @@
   gap: 0.75rem;
   background: var(--surface-color);
   min-height: 240px;
+  position: relative;
 }
 
 .catalog-card header {
@@ -75,6 +76,16 @@
 .catalog-card .catalog-card-category {
   font-size: 0.9rem;
   opacity: 0.7;
+}
+.catalog-card .catalog-card-soldout {
+  background: rgba(220, 38, 38, 0.12);
+  color: var(--danger);
+  border: 1px solid rgba(220, 38, 38, 0.4);
+  border-radius: 10px;
+  padding: 0.2rem 0.5rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  align-self: flex-start;
 }
 
 .catalog-card img {
@@ -116,6 +127,14 @@
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
 }
+.catalog-card.sold-out {
+  border-color: rgba(220, 38, 38, 0.5);
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.05), rgba(220, 38, 38, 0.02));
+}
+.catalog-card.sold-out img {
+  filter: grayscale(0.5);
+  opacity: 0.8;
+}
 
 .catalog-editor h2 {
   margin: 0;
@@ -127,9 +146,22 @@
   flex-direction: column;
   gap: 0.4rem;
 }
+.form-row-inline {
+  gap: 0.25rem;
+}
 
 .form-row label {
   font-weight: 600;
+}
+.checkbox-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+.checkbox-inline input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
 }
 
 .form-hint {

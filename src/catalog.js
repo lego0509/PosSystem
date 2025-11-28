@@ -44,6 +44,7 @@ const productImageFileClear = document.getElementById("product-image-file-clear"
 const productImageFileStatus = document.getElementById("product-image-file-status");
 const productTemplateSelect = document.getElementById("product-template");
 const productDescriptionInput = document.getElementById("product-description");
+const productSoldOutInput = document.getElementById("product-soldout");
 const previewImage = document.getElementById("product-preview-image");
 const previewName = document.getElementById("product-preview-name");
 const previewPrice = document.getElementById("product-preview-price");
@@ -147,6 +148,9 @@ function renderProductList() {
     card.className = "catalog-card";
     card.dataset.id = product.id;
     card.setAttribute("data-testid", `catalog-item-${product.id}`);
+    if (product.soldOut) {
+      card.classList.add("sold-out");
+    }
     if (product.id === selectedProductId) {
       card.classList.add("selected");
     }
@@ -157,6 +161,12 @@ function renderProductList() {
     const categoryTag = document.createElement("span");
     categoryTag.className = "catalog-card-category";
     categoryTag.textContent = categoryName(product.category);
+    if (product.soldOut) {
+      const soldOut = document.createElement("span");
+      soldOut.className = "catalog-card-soldout";
+      soldOut.textContent = "SOLD OUT";
+      header.appendChild(soldOut);
+    }
     header.appendChild(title);
     header.appendChild(categoryTag);
 
@@ -313,6 +323,7 @@ function setForm(product, mode) {
   }
   productTemplateSelect.value = product?.optionTemplate || defaultTemplateForCategory(category);
   productDescriptionInput.value = product?.description || "";
+  productSoldOutInput.checked = Boolean(product?.soldOut);
   saveButton.disabled = false;
   updatePreview();
   if (mode === "edit") {
@@ -414,7 +425,8 @@ function getProductFromForm() {
     price: Math.round(priceValue),
     image: imageSource || fallbackImage,
     optionTemplate: productTemplateSelect.value || defaultTemplateForCategory(productCategorySelect.value),
-    description: productDescriptionInput.value.trim()
+    description: productDescriptionInput.value.trim(),
+    soldOut: productSoldOutInput.checked
   };
   if (uploadedImageData) {
     product.imageName = uploadedImageName;

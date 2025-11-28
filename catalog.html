@@ -97,6 +97,18 @@
               data-testid="catalog-field-price"
             />
           </div>
+          <div class="form-row form-row-inline" aria-live="polite">
+            <label for="product-soldout">売り切れ状態</label>
+            <label class="checkbox-inline">
+              <input
+                id="product-soldout"
+                name="soldOut"
+                type="checkbox"
+                data-testid="catalog-field-soldout"
+              />
+              <span>POSで選択不可（SOLD OUT 表示）</span>
+            </label>
+          </div>
           <div class="form-row">
             <label for="product-image-file">画像ファイル</label>
             <div class="file-input-group">
